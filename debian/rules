@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+
+DEB_HOST_ARCH_OS ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh ${@}
+
+override_dh_autoreconf:
+	dh_autoreconf_clean
+	dh_autoreconf ./autogen.sh --
+
+override_dh_auto_configure:
+ifeq ($(DEB_HOST_ARCH_OS),linux)
+	dh_auto_configure -- --with-plugins=all --disable-silent-rules
+else
+	# omit netstat plugin on non-linux, requires wireless-tools
+	dh_auto_configure -- --with-plugins=all,-netstat --disable-silent-rules --disable-alsa
+endif
+
+override_dh_makeshlibs:
+	# package does not provide public shared libs so disable processing
+
+# remove unused .la file from the package
+override_dh_auto_install:
+	dh_auto_install
+	rm -f debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/lxpanel/*.la

@@ -1,0 +1,7 @@
+# the desktop-command-not-in-package bacause that's alternatives command
+lxpanel: desktop-command-not-in-package usr/share/applications/lxde-x-terminal-emulator.desktop usr/bin/x-terminal-emulator
+lxpanel: desktop-command-not-in-package usr/share/applications/lxde-x-www-browser.desktop usr/bin/x-www-browser
+# it's a false positive, blhc doesn't find any problems
+lxpanel: hardening-no-fortify-functions usr/lib/*/lxpanel/plugins/monitors.so
+# it's old config variable name for backward compatibility
+spelling-error-in-binary usr/lib/*/lxpanel/liblxpanel.so.0.0.0 allign align

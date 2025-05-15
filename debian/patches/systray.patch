@@ -1,0 +1,213 @@
+diff --git a/plugins/tray.c b/plugins/tray.c
+index 58ca8b1..9508699 100644
+--- a/plugins/tray.c
++++ b/plugins/tray.c
+@@ -89,6 +89,7 @@ typedef struct _tray_plugin {
+     GtkWidget * invisible;			/* Invisible window that holds manager selection */
+     Window invisible_window;			/* X window ID of invisible window */
+     GdkAtom selection_atom;			/* Atom for _NET_SYSTEM_TRAY_S%d */
++    int redraw_called;				/* Counter for size-allocate events to distinguish between deliberate redraws and events from panel */
+ } TrayPlugin;
+ 
+ static void balloon_message_display(TrayPlugin * tr, BalloonMessage * msg);
+@@ -97,6 +98,41 @@ static void balloon_message_remove(TrayPlugin * tr, Window window, gboolean all_
+ static void tray_unmanage_selection(TrayPlugin * tr);
+ static void tray_destructor(gpointer user_data);
+ 
++static gboolean init_redraw (gpointer data)
++{
++    TrayPlugin *tr = (TrayPlugin *) data;
++    tr->redraw_called = 3;		/* each force_redraw causes 3 size-allocate events */
++    panel_icon_grid_force_redraw (PANEL_ICON_GRID (tr->plugin));
++    return FALSE;
++}
++
++static gboolean do_redraw (gpointer data)
++{
++    TrayPlugin *tr = (TrayPlugin *) data;
++    if (tr->redraw_called == 0)
++    {
++        tr->redraw_called = 3;		/* each force_redraw causes 3 size-allocate events */
++        panel_icon_grid_force_redraw (PANEL_ICON_GRID (tr->plugin));
++    }
++    return FALSE;
++}
++
++static void redraw (TrayPlugin *tr)
++{
++#if GTK_CHECK_VERSION (3, 0, 0)
++    g_idle_add (do_redraw, tr);
++#endif
++}
++
++static void on_size_alloc (GtkWidget *wid, GtkAllocation *alloc, gpointer data)
++{
++    TrayPlugin *tr = (TrayPlugin *) data;
++    if (tr->redraw_called == 0)
++        redraw (tr);
++    else if (tr->redraw_called > 0)
++        tr->redraw_called--;
++}
++
+ /* Look up a client in the client list. */
+ static TrayClient * client_lookup(TrayPlugin * tr, Window window)
+ {
+@@ -160,6 +196,8 @@ static void client_delete(TrayPlugin * tr, TrayClient * tc, gboolean unlink, gbo
+ 
+     /* Deallocate the client structure. */
+     g_free(tc);
++
++    redraw (tr);
+ }
+ 
+ /*** Balloon message display ***/
+@@ -466,6 +504,8 @@ static void trayclient_request_dock(TrayPlugin * tr, XClientMessageEvent * xeven
+         tc->client_flink = tc_pred->client_flink;
+         tc_pred->client_flink = tc;
+     }
++
++    redraw (tr);
+ }
+ 
+ /* GDK event filter. */
+@@ -649,6 +689,12 @@ static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
+     gtk_widget_set_name(p, "tray");
+     panel_icon_grid_set_aspect_width(PANEL_ICON_GRID(p), TRUE);
+ 
++#if GTK_CHECK_VERSION(3, 0, 0)
++    tr->redraw_called = -1;
++    g_signal_connect (p, "size-allocate", G_CALLBACK (on_size_alloc), tr);
++    g_idle_add (init_redraw, tr);
++#endif
++
+     return p;
+ }
+ 
+@@ -685,11 +731,14 @@ static void tray_destructor(gpointer user_data)
+ /* Callback when panel configuration changes. */
+ static void tray_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
+ {
++    TrayPlugin *tr = lxpanel_plugin_get_data(p);
+     /* Set orientation into the icon grid. */
+     panel_icon_grid_set_geometry(PANEL_ICON_GRID(p), panel_get_orientation(panel),
+                                  panel_get_icon_size(panel),
+                                  panel_get_icon_size(panel),
+                                  3, 0, panel_get_height(panel));
++
++    redraw (tr);
+ }
+ 
+ /* Plugin descriptor. */
+diff --git a/plugins/xkb/xkb-plugin.c b/plugins/xkb/xkb-plugin.c
+index aeeb587..6315dac 100644
+--- a/plugins/xkb/xkb-plugin.c
++++ b/plugins/xkb/xkb-plugin.c
+@@ -1244,7 +1244,7 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
+ #else
+         GTK_STOCK_CLOSE,
+ #endif
+-        GTK_RESPONSE_OK,
++        GTK_RESPONSE_CLOSE,
+         NULL);
+     p_xkb->p_dialog_config = GTK_WINDOW(dlg);
+     panel_apply_icon(p_xkb->p_dialog_config);
+diff --git a/po/POTFILES.skip b/po/POTFILES.skip
+index 9e1ba03..30aa46d 100644
+--- a/po/POTFILES.skip
++++ b/po/POTFILES.skip
+@@ -2,6 +2,7 @@
+ data/ui/netstatus.ui
+ data/ui/panel-pref.ui
+ data/ui/launchtaskbar.ui
++data/ui/lxpanel-modal.ui
+ 
+ # This plugin is unfinished yet
+ plugins/image.c
+diff --git a/src/icon-grid.c b/src/icon-grid.c
+index 914674c..0bf7162 100644
+--- a/src/icon-grid.c
++++ b/src/icon-grid.c
+@@ -61,6 +61,7 @@ struct _PanelIconGrid
+     GdkWindow *event_window;			/* Event window if NO_WINDOW is set */
+     GtkWidget *dest_item;			/* Drag destination to draw focus */
+     PanelIconGridDropPosition dest_pos;		/* Position to draw focus */
++    gboolean hide_children;         /* Flag to force a full redraw of all children while keeping overall allocation the same */
+ };
+ 
+ struct _PanelIconGridClass
+@@ -215,6 +216,11 @@ static void panel_icon_grid_size_allocate(GtkWidget *widget,
+             icon_grid_element_check_requisition(ig, &req);
+             child_allocation.width = MIN(req.width, child_width);
+             child_allocation.height = MIN(req.height, child_height);
++            if (ig->hide_children)
++            {
++                child_allocation.width = 0;
++                child_allocation.height = 0;
++            }
+ 
+             /* Check this grid position */
+             if (ig->orientation == GTK_ORIENTATION_HORIZONTAL)
+@@ -388,10 +394,6 @@ static void panel_icon_grid_size_request(GtkWidget *widget,
+     gint old_columns = ig->columns;
+ 
+     panel_icon_grid_calculate_size(ig, requisition);
+-
+-    /* Apply the requisition. */
+-    if (ig->rows != old_rows || ig->columns != old_columns)
+-        gtk_widget_queue_resize(widget);
+ }
+ 
+ #if GTK_CHECK_VERSION(3, 0, 0)
+@@ -581,12 +583,29 @@ void panel_icon_grid_set_geometry(PanelIconGrid * ig,
+             ig->target_dimension == target_dimension)
+         return;
+ 
++    ig->hide_children = FALSE;
+     ig->orientation = orientation;
+     ig->child_width = child_width;
+     ig->child_height = child_height;
+     ig->spacing = MAX(spacing, 1);
+     ig->target_dimension = MAX(target_dimension, 0);
+     gtk_widget_queue_resize(GTK_WIDGET(ig));
++
++}
++
++static void restore_children (GtkWidget *wid, GtkAllocation *alloc, gpointer data)
++{
++    PanelIconGrid *ig = (PanelIconGrid *) data;
++    g_signal_handlers_disconnect_by_func (wid, restore_children, ig);
++    ig->hide_children = FALSE;
++    gtk_widget_queue_resize (GTK_WIDGET (data));
++}
++
++void panel_icon_grid_force_redraw (PanelIconGrid * ig)
++{
++    g_signal_connect (ig, "size-allocate", G_CALLBACK (restore_children), ig);
++    ig->hide_children = TRUE;
++    gtk_widget_queue_resize (GTK_WIDGET (ig));
+ }
+ 
+ /* get position for coordinates, return FALSE if it's outside of icon grid */
+@@ -1239,6 +1258,7 @@ GtkWidget * panel_icon_grid_new(
+     ig->child_width = child_width;
+     ig->child_height = child_height;
+     ig->target_dimension = MAX(target_dimension, 0);
++    ig->hide_children = FALSE;
+ 
+     return (GtkWidget *)ig;
+ }
+diff --git a/src/icon-grid.h b/src/icon-grid.h
+index c136303..4d35349 100644
+--- a/src/icon-grid.h
++++ b/src/icon-grid.h
+@@ -143,6 +143,10 @@ extern void panel_icon_grid_set_drag_dest(PanelIconGrid * ig, GtkWidget * child,
+  */
+ extern PanelIconGridDropPosition panel_icon_grid_get_drag_dest(PanelIconGrid * ig, GtkWidget ** child);
+ 
++/* function required under GTK+3 to force the system tray to redraw properly */
++
++extern void panel_icon_grid_force_redraw (PanelIconGrid *ig);
++
+ G_END_DECLS
+ 
+ #endif

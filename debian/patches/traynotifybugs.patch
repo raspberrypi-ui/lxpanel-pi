@@ -1,0 +1,181 @@
+diff --git a/plugins/tray.c b/plugins/tray.c
+index 9508699..5a78eff 100644
+--- a/plugins/tray.c
++++ b/plugins/tray.c
+@@ -120,6 +120,7 @@ static gboolean do_redraw (gpointer data)
+ static void redraw (TrayPlugin *tr)
+ {
+ #if GTK_CHECK_VERSION (3, 0, 0)
++    tr->redraw_called = 0;
+     g_idle_add (do_redraw, tr);
+ #endif
+ }
+@@ -690,7 +691,7 @@ static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
+     panel_icon_grid_set_aspect_width(PANEL_ICON_GRID(p), TRUE);
+ 
+ #if GTK_CHECK_VERSION(3, 0, 0)
+-    tr->redraw_called = -1;
++    tr->redraw_called = 0;
+     g_signal_connect (p, "size-allocate", G_CALLBACK (on_size_alloc), tr);
+     g_idle_add (init_redraw, tr);
+ #endif
+diff --git a/src/icon-grid.c b/src/icon-grid.c
+index 0bf7162..5976e54 100644
+--- a/src/icon-grid.c
++++ b/src/icon-grid.c
+@@ -592,13 +592,19 @@ void panel_icon_grid_set_geometry(PanelIconGrid * ig,
+     gtk_widget_queue_resize(GTK_WIDGET(ig));
+ 
+ }
++static gboolean idle_restore (gpointer data)
++{
++    PanelIconGrid *ig = (PanelIconGrid *) data;
++    ig->hide_children = FALSE;
++    gtk_widget_queue_resize (GTK_WIDGET (data));
++    return FALSE;
++}
+ 
+ static void restore_children (GtkWidget *wid, GtkAllocation *alloc, gpointer data)
+ {
+     PanelIconGrid *ig = (PanelIconGrid *) data;
+     g_signal_handlers_disconnect_by_func (wid, restore_children, ig);
+-    ig->hide_children = FALSE;
+-    gtk_widget_queue_resize (GTK_WIDGET (data));
++    g_idle_add (idle_restore, data);
+ }
+ 
+ void panel_icon_grid_force_redraw (PanelIconGrid * ig)
+diff --git a/src/main.c b/src/main.c
+index 26c7b6c..9e23f65 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -66,6 +66,8 @@ static int config = 0;
+ static gboolean mon_override = FALSE;
+ static gboolean is_restarting = FALSE;
+ 
++static LXPanel *first_panel = NULL;
++
+ Command commands[] = {
+     //{ "configure", N_("Preferences"), configure },
+     { "run", N_("Run"), gtk_run },
+@@ -628,6 +630,39 @@ out:
+ }
+ #undef CLIPBOARD_NAME
+ 
++#define WARN_FILE "/proc/device-tree/chosen/user-warnings"
++
++static gboolean check_user_warnings (gpointer data)
++{
++    if (!access (WARN_FILE, F_OK))
++    {
++        FILE *fp = fopen (WARN_FILE, "rb");
++        if (fp)
++        {
++            char *buf = NULL;
++            size_t siz = 0;
++            while (getline (&buf, &siz, fp) != -1)
++                lxpanel_notify ((LXPanel *) data, g_strstrip (buf));
++            free (buf);
++            fclose (fp);
++        }
++    }
++    return FALSE;
++}
++
++static gboolean delay_check (gpointer data)
++{
++    /* It seems that once mutter has started, it cannot correctly display windows with
++     * client-side decorations immediately. The reason this has never been observed is
++     * because the only windows which use CSD are tooltips, and they have an inbuilt
++     * delay so are never shown for at least 0.5 seconds after the panel has started,
++     * giving time for mutter to sort itself out. So we implement a similar-length delay
++     * here before calling lxpanel_notify to make its CSD windows work properly...
++     */
++    g_timeout_add (1000, check_user_warnings, data);
++    return FALSE;
++}
++
+ static void _start_panels_from_dir(const char *panel_dir, int fallback)
+ {
+     GDir* dir = g_dir_open( panel_dir, 0, NULL );
+@@ -645,7 +680,10 @@ static void _start_panels_from_dir(const char *panel_dir, int fallback)
+         {
+             LXPanel* panel = fallback ? panel_new_mon_fb (panel_config, name) : panel_new (panel_config, name);
+             if( panel )
++            {
+                 all_panels = g_slist_prepend( all_panels, panel );
++                if (!first_panel) first_panel = panel;
++            }
+         }
+         g_free( panel_config );
+     }
+@@ -805,6 +843,8 @@ int main(int argc, char *argv[], char *env[])
+ 
+     if( G_UNLIKELY( ! start_all_panels() ) )
+         g_warning( "Config files are not found.\n" );
++
++    g_idle_add (delay_check, first_panel);
+ /*
+  * FIXME: configure??
+     if (config)
+diff --git a/src/notify.c b/src/notify.c
+index 0727338..5529a78 100644
+--- a/src/notify.c
++++ b/src/notify.c
+@@ -64,7 +64,7 @@ static gboolean window_click (GtkWidget *widget, GdkEventButton *event, NotifyWi
+ /* Private functions */
+ /*----------------------------------------------------------------------------*/
+ 
+-/* Calculate position; based on xpanel_plugin_popup_set_position_helper */
++/* Calculate position; based on lxpanel_plugin_popup_set_position_helper */
+ 
+ static void notify_position_helper (LXPanel *p, GtkWidget *popup, gint *px, gint *py)
+ {
+@@ -144,7 +144,7 @@ static void show_message (LXPanel *panel, NotifyWindow *nw, char *str)
+ 
+     gdk_window_set_events (gtk_widget_get_window (nw->popup), gdk_window_get_events (gtk_widget_get_window (nw->popup)) | GDK_BUTTON_PRESS_MASK);
+     g_signal_connect (G_OBJECT (nw->popup), "button-press-event", G_CALLBACK (window_click), nw);
+-    gtk_window_present (GTK_WINDOW (nw->popup));
++    gtk_widget_show (nw->popup);
+     if (panel->priv->notify_timeout > 0) nw->hide_timer = g_timeout_add (panel->priv->notify_timeout * 1000, (GSourceFunc) hide_message, nw);
+ }
+ 
+diff --git a/src/panel.c b/src/panel.c
+index ca218f3..1a7e04e 100644
+--- a/src/panel.c
++++ b/src/panel.c
+@@ -2291,26 +2291,6 @@ static void on_monitors_changed(GdkScreen* screen, gpointer unused)
+     }
+ }
+ 
+-#define WARN_FILE "/proc/device-tree/chosen/user-warnings"
+-
+-static gboolean check_user_warnings (gpointer data)
+-{
+-    if (!access (WARN_FILE, F_OK))
+-    {
+-        FILE *fp = fopen (WARN_FILE, "rb");
+-        if (fp)
+-        {
+-            char *buf = NULL;
+-            size_t siz = 0;
+-            while (getline (&buf, &siz, fp) != -1)
+-                lxpanel_notify ((LXPanel *) data, g_strstrip (buf));
+-            free (buf);
+-            fclose (fp);
+-        }
+-    }
+-    return FALSE;
+-}
+-
+ static int panel_start(LXPanel *p)
+ {
+     config_setting_t *list;
+@@ -2332,7 +2312,6 @@ static int panel_start(LXPanel *p)
+     if (monitors_handler == 0)
+         monitors_handler = g_signal_connect(screen, "monitors-changed",
+                                             G_CALLBACK(on_monitors_changed), NULL);
+-    g_idle_add (check_user_warnings, p);
+     return 1;
+ }
+ 

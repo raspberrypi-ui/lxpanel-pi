@@ -1,0 +1,5 @@
+# The sourceforge site does not support GPG signatures for tarballs
+debian-watch-does-not-check-gpg-signature
+# Those files are Debian specific ones
+maintainer-desktop-entry debian/desktop/lxde-x-www-browser.desktop
+maintainer-desktop-entry debian/desktop/lxde-x-terminal-emulator.desktop

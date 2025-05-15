@@ -1,0 +1,38 @@
+diff --git a/plugins/launchtaskbar.c b/plugins/launchtaskbar.c
+index 7981d18..1961b2a 100644
+--- a/plugins/launchtaskbar.c
++++ b/plugins/launchtaskbar.c
+@@ -1056,6 +1056,7 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
+ 
+         /* Connect a signal to be notified when the window manager changes.  This causes re-evaluation of the "use_net_active" status. */
+         g_signal_connect(ltbp->screen, "window-manager-changed", G_CALLBACK(taskbar_window_manager_changed), ltbp);
++        ltbp->flags.use_net_active = gdk_x11_screen_supports_net_wm_hint (ltbp->screen, gdk_x11_xatom_to_atom (a_NET_ACTIVE_WINDOW));
+ 
+         /* Start blinking timeout if configured */
+         if (ltbp->flags.use_urgency_hint)
+diff --git a/plugins/task-button.c b/plugins/task-button.c
+index 2013fa6..bcba1da 100644
+--- a/plugins/task-button.c
++++ b/plugins/task-button.c
+@@ -113,6 +113,7 @@ enum {
+ static guint signals[N_SIGNALS];
+ 
+ 
++static void task_raise_window(TaskButton *tb, TaskDetails *tk, guint32 time);
+ static void task_update_icon(TaskButton *task, TaskDetails *details, Atom source);
+ 
+ /* -----------------------------------------------------------------------------
+@@ -288,12 +289,7 @@ static void menu_raise_window(GtkWidget * widget, GtkWidget * taskbar)
+ {
+     TaskButton *tb = get_menu_task_button(taskbar);
+     TaskDetails *tk = task_details_lookup(tb, tb->menu_target);
+-    Screen *screen = GDK_SCREEN_XSCREEN(gtk_widget_get_screen(widget));
+-
+-    if ((tk->desktop != ALL_WORKSPACES) && (tk->desktop != tb->desktop))
+-        Xclimsgx(screen, RootWindowOfScreen(screen), a_NET_CURRENT_DESKTOP,
+-                 tk->desktop, 0, 0, 0, 0);
+-    XMapRaised(DisplayOfScreen(screen), tk->win);
++    task_raise_window (tb, tk, GDK_CURRENT_TIME);
+ }
+ 
+ /* Handler for maximize/unmaximize. Taken from WNCK */

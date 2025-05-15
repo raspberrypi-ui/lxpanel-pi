@@ -1,0 +1,493 @@
+diff --git a/plugins/Makefile.am b/plugins/Makefile.am
+index f179b06..81b06b0 100644
+--- a/plugins/Makefile.am
++++ b/plugins/Makefile.am
+@@ -5,7 +5,8 @@ AM_CPPFLAGS = \
+ 	-I$(top_srcdir) \
+ 	-I$(top_srcdir)/src \
+ 	$(PACKAGE_CFLAGS) \
+-	$(G_CAST_CHECKS)
++	$(G_CAST_CHECKS) \
++	-Wall
+ 
+ AM_LDFLAGS = \
+ 	-module -avoid-version -shared -export-dynamic \
+diff --git a/plugins/batt/batt.c b/plugins/batt/batt.c
+index cb01beb..e4d9c45 100644
+--- a/plugins/batt/batt.c
++++ b/plugins/batt/batt.c
+@@ -235,7 +235,6 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
+     cairo_t *cr;
+     battery *b = lx_b->b;
+     /* unit: mW */
+-    int rate;
+     gboolean isCharging;
+ 
+     if (! lx_b->pixmap )
+@@ -267,7 +266,6 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
+ 
+     /* fixme: only one battery supported */
+ 
+-    rate = lx_b->b->current_now;
+     if (lx_b->b->percentage == 100)
+         isCharging = TRUE; /* if battery is fully charged then draw it green */
+     else
+diff --git a/plugins/cpu/cpu.c b/plugins/cpu/cpu.c
+index 040b3e5..22eeac0 100644
+--- a/plugins/cpu/cpu.c
++++ b/plugins/cpu/cpu.c
+@@ -80,7 +80,6 @@ typedef struct {
+ 
+ static void redraw_pixmap(CPUPlugin * c);
+ static gboolean cpu_update(CPUPlugin * c);
+-static gboolean configure_event(GtkWidget * widget, GdkEventConfigure * event, CPUPlugin * c);
+ #if !GTK_CHECK_VERSION(3, 0, 0)
+ static gboolean expose_event(GtkWidget * widget, GdkEventExpose * event, CPUPlugin * c);
+ #else
+@@ -186,7 +185,7 @@ static gboolean cpu_update(CPUPlugin * c)
+         if (stat == NULL) return TRUE;
+         fgets (buffer, 256, stat);
+         fclose (stat);
+-        if (!buffer || !strlen (buffer)) return TRUE;
++        if (!strlen (buffer)) return TRUE;
+         int fscanf_result = sscanf(buffer, "cpu %llu %llu %llu %llu", &cpu.u, &cpu.n, &cpu.s, &cpu.i);
+         if (fscanf_result == 4)
+         {
+@@ -403,6 +402,7 @@ static gboolean cpu_apply_configuration (gpointer user_data)
+     sprintf (colbuf, "%s", gdk_color_to_string (&c->background_color));
+ #endif
+     config_group_set_string (c->settings, "Background", colbuf);
++    return FALSE;
+ }
+ 
+ /* Callback when the configuration dialog is to be shown. */
+diff --git a/plugins/dirmenu.c b/plugins/dirmenu.c
+index 3ea5726..5349e7d 100644
+--- a/plugins/dirmenu.c
++++ b/plugins/dirmenu.c
+@@ -110,6 +110,7 @@ static void dirmenu_menu_selection_done(GtkWidget * menu, DirMenuPlugin * dm)
+ }
+ 
+ /* Position-calculation callback for popup menu. */
++#if !GTK_CHECK_VERSION(3, 0, 0)
+ static void dirmenu_popup_set_position(GtkWidget * menu, gint * px, gint * py, gboolean * push_in, GtkWidget * p)
+ {
+     DirMenuPlugin * dm = lxpanel_plugin_get_data(p);
+@@ -118,6 +119,7 @@ static void dirmenu_popup_set_position(GtkWidget * menu, gint * px, gint * py, g
+     lxpanel_plugin_popup_set_position_helper(dm->panel, p, menu, px, py);
+     *push_in = TRUE;
+ }
++#endif
+ 
+ /* Create a menu populated with all subdirectories. */
+ static GtkWidget * dirmenu_create_menu(DirMenuPlugin * dm, const char * path, gboolean open_at_top)
+diff --git a/plugins/launchtaskbar.c b/plugins/launchtaskbar.c
+index 1961b2a..ba26981 100644
+--- a/plugins/launchtaskbar.c
++++ b/plugins/launchtaskbar.c
+@@ -1070,6 +1070,7 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
+ }
+ 
+ /* Override GtkBox bug - it does not always propagate allocation to children */
++#if 0
+ static void on_size_allocation(GtkWidget *widget, GtkAllocation *a, LaunchTaskBarPlugin *ltbp)
+ {
+     if (ltbp->w != a->width || ltbp->h != a->height)
+@@ -1090,6 +1091,7 @@ static void on_size_allocation(GtkWidget *widget, GtkAllocation *a, LaunchTaskBa
+                                          panel_get_height(ltbp->panel));
+     }
+ }
++#endif
+ 
+ /* Plugin constructor. */
+ static GtkWidget *_launchtaskbar_constructor(LXPanel *panel, config_setting_t *settings,
+diff --git a/plugins/menu.c b/plugins/menu.c
+index 0c20f30..781ad26 100644
+--- a/plugins/menu.c
++++ b/plugins/menu.c
+@@ -157,6 +157,7 @@ run_command(GtkWidget *widget, void (*cmd)(void))
+     RET();
+ }
+ 
++#if !GTK_CHECK_VERSION(3, 0, 0)
+ static void
+ menu_pos(GtkMenu *menu, gint *x, gint *y, gboolean *push_in, GtkWidget *widget)
+ {
+@@ -166,6 +167,7 @@ menu_pos(GtkMenu *menu, gint *x, gint *y, gboolean *push_in, GtkWidget *widget)
+     lxpanel_plugin_popup_set_position_helper(m->panel, widget, GTK_WIDGET(menu), x, y);
+     *push_in = TRUE;
+ }
++#endif
+ 
+ static void on_menu_item( GtkMenuItem* mi, menup* m )
+ {
+@@ -1062,7 +1064,7 @@ menu_constructor(LXPanel *panel, config_setting_t *settings)
+ {
+     menup *m;
+     config_setting_t *s;
+-    int iw, ih;
++    int iw;
+ 
+ #ifdef ENABLE_NLS
+     setlocale (LC_ALL, "");
+diff --git a/plugins/netstatus/netstatus-icon.c b/plugins/netstatus/netstatus-icon.c
+index b87f921..7ed7cde 100644
+--- a/plugins/netstatus/netstatus-icon.c
++++ b/plugins/netstatus/netstatus-icon.c
+@@ -672,7 +672,9 @@ netstatus_icon_realize (GtkWidget *widget)
+   guint         border_width;
+   GtkAllocation allocation;
+   GdkWindow    *window;
++#if !GTK_CHECK_VERSION(3, 0, 0)
+   GtkStyle     *style;
++#endif
+ 
+ #if GTK_CHECK_VERSION(2, 20, 0)
+   gtk_widget_set_realized(widget, TRUE);
+diff --git a/plugins/task-button.c b/plugins/task-button.c
+index c82cbcb..b5eae3f 100644
+--- a/plugins/task-button.c
++++ b/plugins/task-button.c
+@@ -270,6 +270,7 @@ static TaskDetails *task_details_lookup(TaskButton *task, Window win)
+ }
+ 
+ /* Position-calculation callback for grouped-task and window-management popup menu. */
++#if !GTK_CHECK_VERSION(3, 0, 0)
+ static void taskbar_popup_set_position(GtkMenu * menu, gint * px, gint * py, gboolean * push_in, gpointer data)
+ {
+     TaskButton * tb = (TaskButton *) data;
+@@ -278,6 +279,7 @@ static void taskbar_popup_set_position(GtkMenu * menu, gint * px, gint * py, gbo
+     lxpanel_plugin_popup_set_position_helper(tb->panel, data, GTK_WIDGET(menu), px, py);
+     *push_in = TRUE;
+ }
++#endif
+ 
+ static inline TaskButton *get_menu_task_button(GtkWidget *taskbar)
+ {
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 5a316bb..70b0a68 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -11,7 +11,8 @@ lxpanel_CPPFLAGS = \
+ 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
+ 	$(PACKAGE_CFLAGS) \
+ 	$(KEYBINDER_CFLAGS) \
+-	$(G_CAST_CHECKS)
++	$(G_CAST_CHECKS) \
++	-Wall
+ 
+ BUILTIN_PLUGINS = $(top_builddir)/plugins/libbuiltin_plugins.a
+ 
+diff --git a/src/configurator.c b/src/configurator.c
+index a0da5e9..787c676 100644
+--- a/src/configurator.c
++++ b/src/configurator.c
+@@ -84,7 +84,9 @@ static char* logout_cmd = NULL;
+ 
+ /* GtkColotButton expects a number between 0 and 65535, but p->alpha has range
+  * 0 to 255, and (2^(2n) - 1) / (2^n - 1) = 2^n + 1 = 257, with n = 8. */
++#if !GTK_CHECK_VERSION(3, 0, 0)
+ static guint16 const alpha_scale_factor = 257;
++#endif
+ 
+ void panel_config_save(Panel *p);
+ 
+@@ -372,6 +374,7 @@ static void set_width_type( GtkWidget *item, LXPanel* panel )
+ 
+ /* FIXME: heighttype and spacing and RoundCorners */
+ 
++#if 0
+ static void transparency_toggle( GtkWidget *b, Panel* p)
+ {
+     GtkWidget* tr = (GtkWidget*)g_object_get_data(G_OBJECT(b), "tint_clr");
+@@ -535,6 +538,7 @@ on_use_font_size_toggled(GtkToggleButton* btn, LXPanel* panel)
+     UPDATE_GLOBAL_INT(p, "usefontsize", p->usefontsize);
+     _panel_emit_font_changed(panel);
+ }
++#endif
+ 
+ 
+ static void
+@@ -819,7 +823,9 @@ static void on_add_plugin( GtkButton* btn, GtkTreeView* _view )
+     GHashTableIter iter;
+     gpointer key, val;
+ 
++#if !GTK_CHECK_VERSION(3, 0, 0)
+     LXPanel* p = (LXPanel*) g_object_get_data( G_OBJECT(_view), "panel" );
++#endif
+ 
+     classes = lxpanel_get_all_types();
+ 
+@@ -1135,7 +1141,11 @@ void panel_configure( LXPanel* panel, int sel_page )
+ {
+     Panel *p = panel->priv;
+     GtkBuilder* builder;
++#if GTK_CHECK_VERSION(3, 0, 0)
++    GtkWidget *w;
++#else
+     GtkWidget *w, *w2, *tint_clr;
++#endif
+     FmMimeType *mt;
+     GtkComboBox *fm;
+ #if GTK_CHECK_VERSION(3, 0, 0)
+@@ -1210,7 +1220,7 @@ void panel_configure( LXPanel* panel, int sel_page )
+         GtkTreeIter it;
+ #endif
+         gint i;
+-        char itext[4];
++        char itext[12];
+ 
+         /* create a new cell renderer and bind cell data function to it */
+         cell = gtk_cell_renderer_text_new();
+@@ -1577,7 +1587,7 @@ static void on_radio_changed( GtkRadioButton* btn, gpointer user_data )
+ 
+     GSList *group = gtk_radio_button_get_group (btn);
+     GtkRadioButton *tbtn;
+-    int nbtn = 0, sbtn;
++    int nbtn = 0, sbtn = -1;
+     while (group)
+     {
+         tbtn = group->data;
+@@ -1666,8 +1676,6 @@ static void generic_config_dlg_response(GtkWidget * dlg, int response, Panel * p
+ 
+ void _panel_show_config_dialog(LXPanel *panel, GtkWidget *p, GtkWidget *dlg)
+ {
+-    gint x, y;
+-
+     /* If there is already a plugin configuration dialog open, close it.
+      * Then record this one in case the panel or plugin is deleted. */
+     if (panel->priv->plugin_pref_dialog != NULL)
+@@ -1707,7 +1715,7 @@ static GtkWidget *_lxpanel_generic_config_dlg(const char *title, Panel *p,
+     gtk_box_set_spacing( dlg_vbox, 4 );
+ 
+     int rb_group = 0;
+-    GtkWidget *lastbtn;
++    GtkWidget *lastbtn = NULL;
+     while( name )
+     {
+         GtkWidget* entry = NULL;
+@@ -1773,7 +1781,7 @@ static GtkWidget *_lxpanel_generic_config_dlg(const char *title, Panel *p,
+                 }
+                 break;
+             case CONF_TYPE_RBUTTON:
+-                if (!rb_group)
++                if (!lastbtn)
+                 {
+                     entry = gtk_radio_button_new_with_label (NULL, name);
+                     g_signal_connect (entry, "toggled", G_CALLBACK(on_radio_changed), val);
+diff --git a/src/icon-grid.c b/src/icon-grid.c
+index 5976e54..3b4319f 100644
+--- a/src/icon-grid.c
++++ b/src/icon-grid.c
+@@ -390,8 +390,6 @@ static void panel_icon_grid_size_request(GtkWidget *widget,
+                                          GtkRequisition *requisition)
+ {
+     PanelIconGrid *ig = PANEL_ICON_GRID(widget);
+-    gint old_rows = ig->rows;
+-    gint old_columns = ig->columns;
+ 
+     panel_icon_grid_calculate_size(ig, requisition);
+ }
+@@ -914,7 +912,9 @@ static void panel_icon_grid_realize(GtkWidget *widget)
+ {
+     PanelIconGrid *ig = PANEL_ICON_GRID(widget);
+     GdkWindow *window;
++#if !GTK_CHECK_VERSION(3, 0, 0)
+     GtkStyle *style;
++#endif
+     GtkAllocation allocation;
+     GdkWindowAttr attributes;
+     guint border = gtk_container_get_border_width(GTK_CONTAINER(widget));
+diff --git a/src/main.c b/src/main.c
+index 6978089..2605ca7 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -423,11 +423,16 @@ static void process_client_msg ( XClientMessageEvent* ev )
+ 
+                 buf = NULL;
+                 fp = fopen (&ev->data.b[2], "rb");
+-                getdelim (&buf, &siz, 0, fp);
+-                fclose (fp);
++                if (fp)
++                {
++                    if (getdelim (&buf, &siz, 0, fp) > 0)
++                    {
++                        lxpanel_notify (p, buf);
++                        free (buf);
++                    }
++                    fclose (fp);
++                }
+                 remove (&ev->data.b[2]);
+-                lxpanel_notify (p, buf);
+-                free (buf);
+             } while(0);
+             break;
+     }
+@@ -729,7 +734,9 @@ int main(int argc, char *argv[], char *env[])
+ {
+     int i;
+     const char* desktop_name;
++#if !GTK_CHECK_VERSION(3, 0, 0)
+     char *file;
++#endif
+ 
+     setlocale(LC_CTYPE, "");
+ 
+diff --git a/src/misc.c b/src/misc.c
+index 5fbf03a..95f9af5 100644
+--- a/src/misc.c
++++ b/src/misc.c
+@@ -1255,6 +1255,7 @@ guint32 gcolor2rgb24(GdkColor *color)
+ }
+ #endif
+ 
++#if 0
+ /* Handler for "enter-notify-event" signal on image that has highlighting requested. */
+ static gboolean fb_button_enter(GtkImage * widget, GdkEventCrossing * event)
+ {
+@@ -1314,6 +1315,7 @@ static gboolean fb_button_leave(GtkImage * widget, GdkEventCrossing * event, gpo
+     }
+     return TRUE;
+ }
++#endif
+ 
+ static void on_font_changed(LXPanel * panel, GtkLabel * lbl)
+ {
+diff --git a/src/notify.c b/src/notify.c
+index 3ce7f8a..5c223f9 100644
+--- a/src/notify.c
++++ b/src/notify.c
+@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ typedef struct {
+     GtkWidget *popup;               /* Popup message window*/
+     guint hide_timer;               /* Timer to hide message window */
+-    unsigned int seq;               /* Sequence number */
++    int seq;                        /* Sequence number */
+     guint hash;                     /* Hash of message string */
+     char *message;
+     gboolean shown;
+@@ -54,7 +54,7 @@ typedef struct {
+ /*----------------------------------------------------------------------------*/
+ 
+ static GList *nwins = NULL;         /* List of current notifications */
+-static unsigned int nseq = 0;       /* Sequence number for notifications */
++static int nseq = 0;                /* Sequence number for notifications */
+ static gint interval_timer = 0;     /* Used to show windows one at a time */
+ 
+ /*----------------------------------------------------------------------------*/
+@@ -65,7 +65,6 @@ static void show_message (LXPanel *panel, NotifyWindow *nw, char *str);
+ static gboolean hide_message (NotifyWindow *nw);
+ static void update_positions (GList *item, int offset);
+ static gboolean window_click (GtkWidget *widget, GdkEventButton *event, NotifyWindow *nw);
+-static gboolean notify_unmute (LXPanel *panel);
+ 
+ /*----------------------------------------------------------------------------*/
+ /* Private functions */
+@@ -103,7 +102,6 @@ static void notify_position_helper (LXPanel *p, GtkWidget *popup, gint *px, gint
+ static void show_message (LXPanel *panel, NotifyWindow *nw, char *str)
+ {
+     GtkWidget *box, *item;
+-    GList *plugins;
+     gint x, y;
+     char *fmt, *cptr;
+ 
+@@ -249,11 +247,10 @@ void lxpanel_notify_init (LXPanel *panel)
+     interval_timer = g_timeout_add (INIT_MUTE, (GSourceFunc) show_next, panel);
+ }
+ 
+-unsigned int lxpanel_notify (LXPanel *panel, char *message)
++int lxpanel_notify (LXPanel *panel, char *message)
+ {
+     NotifyWindow *nw;
+     GList *item;
+-    int w, h;
+ 
+     // check for notifications being disabled
+     if (!panel->priv->notifications) return 0;
+@@ -292,7 +289,7 @@ unsigned int lxpanel_notify (LXPanel *panel, char *message)
+     return nseq;
+ }
+ 
+-void lxpanel_notify_clear (unsigned int seq)
++void lxpanel_notify_clear (int seq)
+ {
+     NotifyWindow *nw;
+     GList *item;
+diff --git a/src/panel.c b/src/panel.c
+index 1a7e04e..6e0064d 100644
+--- a/src/panel.c
++++ b/src/panel.c
+@@ -948,13 +948,13 @@ static void paint_root_pixmap(LXPanel *panel, cairo_t *cr)
+ 
+ static void _panel_determine_background_pixmap(LXPanel * panel)
+ {
+-#if GTK_CHECK_VERSION(3, 0, 0)
+-    cairo_pattern_t *pattern;
+-#else
++#if !GTK_CHECK_VERSION(3, 0, 0)
+     GdkPixmap * pixmap = NULL;
+ #endif
+     GtkWidget * widget = GTK_WIDGET(panel);
++#if !GTK_CHECK_VERSION(3, 0, 0)
+     GdkWindow * window = gtk_widget_get_window(widget);
++#endif
+     Panel * p = panel->priv;
+     cairo_t *cr;
+     gint x = 0, y = 0;
+@@ -1605,7 +1605,7 @@ void panel_apply_icon( GtkWindow *w )
+ 
+ GtkMenu* lxpanel_get_plugin_menu( LXPanel* panel, GtkWidget* plugin, gboolean use_sub_menu )
+ {
+-    GtkWidget  *menu_item, *img;
++    GtkWidget  *menu_item;
+     GtkMenu *ret,*menu;
+     const LXPanelPluginInit *init;
+     char* tmp;
+@@ -1622,7 +1622,7 @@ GtkMenu* lxpanel_get_plugin_menu( LXPanel* panel, GtkWidget* plugin, gboolean us
+         menu_item = gtk_menu_item_new_with_label( tmp );
+         g_free( tmp );
+ #else
+-        img = gtk_image_new_from_stock( GTK_STOCK_PREFERENCES, GTK_ICON_SIZE_MENU );
++        GtkWidget *img = gtk_image_new_from_stock( GTK_STOCK_PREFERENCES, GTK_ICON_SIZE_MENU );
+         tmp = g_strdup_printf(_("%s Settings"),
+                               g_dgettext(init->gettext_package, init->name));
+         menu_item = gtk_image_menu_item_new_with_label( tmp );
+diff --git a/src/plugin.c b/src/plugin.c
+index 4a96f6c..b5109a4 100644
+--- a/src/plugin.c
++++ b/src/plugin.c
+@@ -68,7 +68,9 @@ static inline const LXPanelPluginInit *_find_plugin(const char *name)
+ 
+ static GtkWidget *_old_plugin_config(LXPanel *panel, GtkWidget *instance)
+ {
++#ifndef G_DISABLE_CHECKS
+     const LXPanelPluginInit *init = PLUGIN_CLASS(instance);
++#endif
+     Plugin * plugin;
+ 
+     g_return_val_if_fail(init != NULL && init->new_instance == NULL, NULL);
+@@ -80,7 +82,9 @@ static GtkWidget *_old_plugin_config(LXPanel *panel, GtkWidget *instance)
+ 
+ static void _old_plugin_reconfigure(LXPanel *panel, GtkWidget *instance)
+ {
++#ifndef G_DISABLE_CHECKS
+     const LXPanelPluginInit *init = PLUGIN_CLASS(instance);
++#endif
+     Plugin * plugin;
+ 
+     g_return_if_fail(init != NULL && init->new_instance == NULL);
+diff --git a/src/plugin.h b/src/plugin.h
+index 6bf4ab5..244febe 100644
+--- a/src/plugin.h
++++ b/src/plugin.h
+@@ -393,8 +393,8 @@ extern void lxpanel_plugin_append_menu_icon (GtkWidget *item, GtkWidget *image);
+ extern const char *lxpanel_plugin_get_menu_label (GtkWidget *item);
+ 
+ extern void lxpanel_notify_init (LXPanel *panel);
+-extern unsigned int lxpanel_notify (LXPanel *panel, char *message);
+-extern void lxpanel_notify_clear (unsigned int seq);
++extern int lxpanel_notify (LXPanel *panel, char *message);
++extern void lxpanel_notify_clear (int seq);
+ 
+ G_END_DECLS
+ 
