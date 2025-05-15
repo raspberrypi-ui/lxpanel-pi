@@ -32,7 +32,7 @@ headers = files(
   'plugin.h'
 )
 
-liblxpanel = shared_library(meson.project_name(), panellib_sources,
+liblxpanel = both_libraries(meson.project_name(), panellib_sources,
         dependencies: deps,
         install: true,
         install_dir: get_option('libdir') / 'lxpanel-pi'
@@ -42,7 +42,7 @@ executable('lxpanel-pi', panel_sources,
         dependencies: deps,
         install: true,
         export_dynamic: true,
-        link_with : [ liblxpanel, liblxpanelplugins ]
+        link_with : [ liblxpanel.get_static_lib(), liblxpanelplugins ]
 )
 
 executable('lxpanelctl-pi', control_sources,
