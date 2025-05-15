@@ -18,8 +18,7 @@ two_panels_config_paneldir = $(sysconfdir)/xdg/lxpanel/two_panels/panels
 uidir=$(datadir)/lxpanel/ui
 ui_in_files= \
 	ui/panel-pref.glade \
-	ui/launchtaskbar.glade \
-	ui/netstatus.glade
+	ui/launchtaskbar.glade
 
 ui_DATA = $(ui_in_files:.glade=.ui)
 
