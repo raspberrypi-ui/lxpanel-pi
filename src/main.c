@@ -529,26 +529,8 @@ static void init_static_plugins(void)
     REGISTER_STATIC_MODULE(dclock);
 #endif
 
-#ifdef STATIC_WINCMD
-    REGISTER_STATIC_MODULE(wincmd);
-#endif
-
-#ifdef STATIC_DIRMENU
-    REGISTER_STATIC_MODULE(dirmenu);
-#endif
-
-#ifdef STATIC_PAGER
-    REGISTER_STATIC_MODULE(pager);
-#endif
-
 #ifdef STATIC_TRAY
     REGISTER_STATIC_MODULE(tray);
-#endif
-
-#ifndef DISABLE_MENU
-#ifdef STATIC_MENU
-    REGISTER_STATIC_MODULE(menu);
-#endif
 #endif
 }
 

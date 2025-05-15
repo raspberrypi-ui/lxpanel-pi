@@ -57,34 +57,6 @@ PKG_CHECK_MODULES(KEYBINDER, [$keybinder_module])
 AC_SUBST(KEYBINDER_CFLAGS)
 AC_SUBST(KEYBINDER_LIBS)
 
-###########################
-# Indicator Info
-###########################
-AC_ARG_ENABLE([indicator_support],
-    AS_HELP_STRING([--enable-indicator-support],
-               [enable plugin loading (default: disable)]),
-               indicator_support=$enableval, indicator_support="no")
-AM_CONDITIONAL(ENABLE_INDICATOR_SUPPORT, test x"$indicator_support" = x"yes")
-
-if test "$indicator_support" != "no"; then
-	INDICATOR_REQUIRED_VERSION=0.3.0
-	INDICATOR_PKG_NAME=indicator-0.4
-
-	PKG_CHECK_MODULES(APPLET, $INDICATOR_PKG_NAME >= $INDICATOR_REQUIRED_VERSION)
-	AC_SUBST(APPLET_CFLAGS)
-
-	if test "x$with_localinstall" = "xyes"; then
-		INDICATORDIR="${libdir}/indicators/2/"
-		INDICATORICONSDIR="${datadir}/indicator-applet/icons/"
-	else
-		INDICATORDIR=`$PKG_CONFIG --variable=indicatordir $INDICATOR_PKG_NAME`
-		INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir $INDICATOR_PKG_NAME`
-fi
-	AC_SUBST(INDICATORDIR)
-	AC_SUBST(INDICATORICONSDIR)
-fi
-
-
 pkg_modules="x11"
 PKG_CHECK_MODULES(X11, [$pkg_modules])
 AC_SUBST(X11_LIBS)
@@ -162,21 +134,6 @@ case `$LD --sort-common -v 2>&1 </dev/null` in
   ;;
 esac
 
-AC_ARG_ENABLE([alsa],
-    AS_HELP_STRING([--disable-alsa],
-                    [compile ALSA providers (default: enable)]),
-            compile_alsa=$enableval, compile_alsa="yes")
-if test x"$compile_alsa" = "xyes"; then
-    AC_CHECK_HEADERS([alsa/asoundlib.h],
-                     [AC_CHECK_LIB([asound],
-                                   [snd_seq_open],
-                                   compile_alsa=yes,compile_alsa=no)],
-                          compile_alsa=no)
-fi
-AM_CONDITIONAL(BUILD_ALSA_PLUGINS, test x$compile_alsa = xyes)
-dnl FIXME: check OSS existence
-AM_CONDITIONAL(BUILD_OSS_PLUGINS, test x$compile_alsa = xno)
-
 AC_ARG_ENABLE([plugins-loading],
     AS_HELP_STRING([--disable-plugins-loading],
                [disable plugin loading (default: enable)]),
@@ -186,138 +143,6 @@ AM_CONDITIONAL(BUILD_PLUGIN_LOADER, test x$plugins_loading = xyes)
 
 if test x"$plugins_loading" = "xno"; then
     AC_DEFINE(DISABLE_PLUGINS_LOADING, [1], [Disable plugin loading])
-fi
-
-dnl Here are plugin listing.
-plugin_netstatus=
-plugin_netstat=
-plugin_volume=
-plugin_deskno=
-plugin_xkb=
-plugin_kbled=
-plugin_thermal=
-plugin_cpufreq=
-plugin_monitors=
-plugin_indicator=
-
-AC_MSG_CHECKING([which plugins should be built dynamically])
-AC_ARG_WITH(plugins,
-[  --with-plugins=<list>  compile dynamic plugins in <list> ]
-[                         plugins may be comma separated ]
-[                         'all' builds all plugins (default), 'none' builds none ]
-[                         plugins prefixed with '-' are not built]
-[                         Possible plugins are: ]
-[                         netstatus, netstat, volume, deskno, kbled,]
-[                         xkb, thermal, cpufreq, monitors, indicator, weather]
-, plugins="$withval",[plugins="all"])
-
-if test x"$plugins" != xall -a x"$plugins" != xnone; then
-    if test x"$plugins_loading" = xno; then
-        AC_MSG_ERROR(
-        [--disable-plugins-loading and --with-plugins conflict each other.])
-    fi
-fi
-
-ALL_PLUGINS_LIST="netstatus netstat volume volumealsa cpu deskno batt kbled xkb thermal cpufreq monitors indicator weather"
-
-AC_DEFUN([check_plugin_name],[
-    plugin_found=false
-    for name in $ALL_PLUGINS_LIST; do
-        if test x[$1] = x[$name]; then
-            plugin_found=true
-        fi
-    done
-    if test x[$plugin_found] = false; then
-        echo [Unknown plugin $1.]
-        exit 1
-    fi
-])
-
-if test "$plugins" != "none"; then
-    plugins=`echo $plugins | sed 's/,/ /g'`
-    for plugin in $plugins
-    do
-        case "$plugin" in
-            all)
-                for name in $ALL_PLUGINS_LIST
-                do
-                    export plugin_$name="$name.la"
-                done
-                ;;
-            -*)
-                check_plugin_name([${plugin#-}])
-                export plugin_${plugin#-}=
-                ;;
-            *)
-                check_plugin_name([$plugin])
-                export plugin_$plugin=$plugin.la
-                ;;
-        esac
-    done
-    AC_MSG_RESULT($plugins)
-fi
-
-dnl FIXME: OSS/ALSA checking
-if test x"$compile_alsa" = "xno"; then
-    AC_DEFINE(DISABLE_ALSA, [1], [Define to disable using ALSA in 'volume' plugin.])
-    if test -n $plugin_volume; then
-        AC_CHECK_HEADERS([sys/soundcard.h linux/soundcard.h])
-        if test x$ac_cv_header_sys_soundcard_h = xno && test x$ac_cv_header_linux_soundcard_h = xno; then
-            AC_MSG_RESULT([no OSS headers found!])
-            plugin_volume=
-        fi
-    fi
-else
-    dnl use $plugin_volumealsa for backward compatibility
-    if test -n "$plugin_volumealsa"; then
-        plugin_volume=volume.la
-    fi
-fi
-
-if test -n "$plugin_weather"; then
-    AC_MSG_CHECKING([for CURL development files])
-    curl-config --help &>/dev/null || {
-        AC_MSG_ERROR([weather plugin requires libcurl development files])
-    }
-    CURL_CFLAGS=$(curl-config --cflags)
-    CURL_LIBS=$(curl-config --libs)
-    AC_MSG_RESULT([found])
-    AC_SUBST(CURL_CFLAGS)
-    AC_SUBST(CURL_LIBS)
-fi
-
-dnl Exclude indicator support when there is no support.
-if test x"$indicator_support" = "xno"; then
-    plugin_indicator=
-fi
-
-PLUGINS_LIST="\
-    $plugin_netstatus \
-    $plugin_netstat \
-    $plugin_volume \
-    $plugin_deskno \
-    $plugin_kbled \
-    $plugin_xkb \
-    $plugin_thermal \
-    $plugin_cpufreq \
-    $plugin_monitors \
-    $plugin_indicator \
-    $plugin_weather"
-
-AC_SUBST(PLUGINS_LIST)
-
-# Plugin-specific dependencies
-# nestat
-if test x"$plugin_netstat" != "x";then
-AC_CHECK_HEADER([iwlib.h],,
- AC_MSG_ERROR([netstat plugin requires wireless-tools-devel]))
-fi
-
-# weather
-if test x"$plugin_weather" != "x";then
-PKG_CHECK_MODULES([LIBXML2], [libxml-2.0])
-AC_SUBST(LIBXML2_CFLAGS)
-AC_SUBST(LIBXML2_LIBS)
 fi
 
 # Checks for header files.
