@@ -2238,10 +2238,10 @@ static void taskbar_add_new_window(LaunchTaskBarPlugin * tb, Window win, GList *
  *****************************************************/
 
 /* Handler for "client-list" event from root window listener. */
-static void taskbar_net_client_list(GtkWidget * widget, LaunchTaskBarPlugin * tb)
+static gboolean do_client_list(gpointer data)
 {
-    LaunchTaskBarPlugin *ltbp = tb;
-    if(ltbp->mode == LAUNCHBAR) return;
+    LaunchTaskBarPlugin *tb = (LaunchTaskBarPlugin *) data;
+    if(tb->mode == LAUNCHBAR) return FALSE;
 
     /* Get the NET_CLIENT_LIST property. */
     int client_count;
@@ -2290,6 +2290,13 @@ static void taskbar_net_client_list(GtkWidget * widget, LaunchTaskBarPlugin * tb
     else /* clear taskbar */
         gtk_container_foreach(GTK_CONTAINER(tb->tb_icon_grid),
                               (GtkCallback)gtk_widget_destroy, NULL);
+
+    return FALSE;
+}
+
+static void taskbar_net_client_list(GtkWidget * widget, LaunchTaskBarPlugin * tb)
+{
+    g_timeout_add (100, do_client_list, tb);
 }
 
 /* Handler for "current-desktop" event from root window listener. */
