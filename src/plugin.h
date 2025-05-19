@@ -264,17 +264,27 @@ extern void lxpanel_plugin_show_config_dialog(GtkWidget* plugin);
  * Type of variable passed to lxpanel_generic_config_dlg().
  */
 typedef enum {
-    CONF_TYPE_STR,
-    CONF_TYPE_INT,
+    CONF_TYPE_NONE,
     CONF_TYPE_BOOL,
+    CONF_TYPE_INT,
+    CONF_TYPE_STRING,
+    CONF_TYPE_COLOUR,
+    CONF_TYPE_FONT,
+    CONF_TYPE_LABEL,
+    CONF_TYPE_RBUTTON,
     CONF_TYPE_FILE,
     CONF_TYPE_FILE_ENTRY,
     CONF_TYPE_DIRECTORY_ENTRY,
     CONF_TYPE_TRIM,
     CONF_TYPE_EXTERNAL,
-    CONF_TYPE_COLOR,
-    CONF_TYPE_RBUTTON
-} PluginConfType;
+} CONF_TYPE;
+
+typedef struct {
+    CONF_TYPE type;
+    const char *name;
+    const char *label;
+    void **value;
+} conf_table_t;
 
 /**
  * lxpanel_generic_config_dlg
@@ -302,6 +312,10 @@ extern GtkWidget *lxpanel_generic_config_dlg(const char *title, LXPanel *panel,
                                              GtkWidget *plugin,
                                              const char *name, ...);
 
+extern GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
+                                             GSourceFunc apply_func,
+                                             GtkWidget *plugin,
+                                             conf_table_t *conf_table);
 /**
  * panel_config_int_button_new
  * @name: text representing the option in dialog
@@ -418,6 +432,9 @@ extern void graph_free (PluginGraph *graph);
 extern void popup_at_button (LXPanel *panel, GtkWidget *window, GtkWidget *button, gpointer plugin);
 
 extern gboolean is_pi (void);
+
+extern void lxplug_read_settings (config_setting_t *settings, conf_table_t *conf_table);
+extern void lxplug_write_settings (config_setting_t *settings, conf_table_t *conf_table);
 
 #define wrap_new_menu_item(plugin,text,maxlen,icon) lxpanel_plugin_new_menu_item(plugin->panel,text,maxlen,icon)
 #define wrap_set_menu_icon(plugin,image,icon) lxpanel_plugin_set_menu_icon(plugin->panel,image,icon)

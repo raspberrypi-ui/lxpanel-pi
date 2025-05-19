@@ -525,10 +525,6 @@ static void init_static_plugins(void)
     REGISTER_STATIC_MODULE(launchtaskbar);
 #endif
 
-#ifdef STATIC_DCLOCK
-    REGISTER_STATIC_MODULE(dclock);
-#endif
-
 #ifdef STATIC_TRAY
     REGISTER_STATIC_MODULE(tray);
 #endif

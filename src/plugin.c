@@ -912,3 +912,70 @@ gboolean is_pi (void)
     if (!access ("/boot/firmware/config.txt", R_OK)) return TRUE;
     return FALSE;
 }
+
+void lxplug_read_settings (config_setting_t *settings, conf_table_t *conf_table)
+{
+    conf_table_t *cptr = &conf_table[0];
+    const char *str;
+    int val;
+
+    while (cptr->type != CONF_TYPE_NONE)
+    {
+        switch (cptr->type)
+        {
+            case CONF_TYPE_BOOL :
+            case CONF_TYPE_INT :
+                if (config_setting_lookup_int (settings, cptr->name, &val))
+                    cptr->value = val;
+                break;
+
+            case CONF_TYPE_STRING :
+                if (config_setting_lookup_string (settings, cptr->name, &str))
+                    *(cptr->value) = g_strdup (str);
+                else
+                    *(cptr->value) = g_strdup ("");
+                break;
+
+            case CONF_TYPE_COLOUR :
+                if (config_setting_lookup_string (settings, cptr->name, &str))
+                    gdk_rgba_parse (&cptr->value, str);
+                break;
+
+            case CONF_TYPE_FONT :
+            case CONF_TYPE_RBUTTON :
+            default: break;
+        }
+        cptr++;
+    }
+}
+
+void lxplug_write_settings (config_setting_t *settings, conf_table_t *conf_table)
+{
+    conf_table_t *cptr = conf_table;
+
+    while (cptr->type != CONF_TYPE_NONE)
+    {
+        switch (cptr->type)
+        {
+            case CONF_TYPE_BOOL :
+            case CONF_TYPE_INT :
+                //config_setting_lookup_int (settings, cptr->name, cptr->value);
+                break;
+
+            case CONF_TYPE_STRING :
+                if (*cptr->value)
+                    config_group_set_string (settings, cptr->name, (char *) *cptr->value);
+                break;
+
+            case CONF_TYPE_COLOUR :
+                //if (config_setting_lookup_string (settings, cptr->name, &str))
+                //    gdk_rgba_parse (&cptr->value, str);
+                break;
+
+            case CONF_TYPE_FONT :
+            case CONF_TYPE_RBUTTON :
+            default: break;
+        }
+        cptr++;
+    }
+}

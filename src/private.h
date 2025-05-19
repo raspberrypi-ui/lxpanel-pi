@@ -233,14 +233,8 @@ void free_global_config(void);
 #define STATIC_SEPARATOR
 #define STATIC_LAUNCHBAR
 #define STATIC_LAUNCHTASKBAR
-#define STATIC_DCLOCK
-#define STATIC_WINCMD
-#define STATIC_DIRMENU
 #define STATIC_TASKBAR
-#define STATIC_PAGER
 #define STATIC_TRAY
-#define STATIC_MENU
-#define STATIC_ICONS
 
 /* Plugins management - new style */
 void lxpanel_prepare_modules(void);

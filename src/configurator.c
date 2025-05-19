@@ -1697,11 +1697,7 @@ static GtkWidget *_lxpanel_generic_config_dlg(const char *title, Panel *p,
                                               const char *name, va_list args)
 {
     GtkWidget* dlg = gtk_dialog_new_with_buttons( title, NULL, 0,
-#if GTK_CHECK_VERSION(3, 0, 0)
                                                   _("_OK"),
-#else
-                                                  GTK_STOCK_OK,
-#endif
                                                   GTK_RESPONSE_CLOSE,
                                                   NULL );
     GtkBox *dlg_vbox = GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dlg)));
@@ -1720,13 +1716,13 @@ static GtkWidget *_lxpanel_generic_config_dlg(const char *title, Panel *p,
     {
         GtkWidget* entry = NULL;
         gpointer val = va_arg( args, gpointer );
-        PluginConfType type = va_arg( args, PluginConfType );
+        CONF_TYPE type = va_arg( args, CONF_TYPE );
         if (rb_group && type != CONF_TYPE_RBUTTON) rb_group = 0;
         if (type != CONF_TYPE_TRIM && val == NULL)
             g_critical("NULL pointer for generic config dialog");
         else switch( type )
         {
-            case CONF_TYPE_STR:
+            case CONF_TYPE_STRING:
             case CONF_TYPE_FILE_ENTRY: /* entry with a button to browse for files. */
             case CONF_TYPE_DIRECTORY_ENTRY: /* entry with a button to browse for directories. */
                 entry = gtk_entry_new();
@@ -1769,14 +1765,10 @@ static GtkWidget *_lxpanel_generic_config_dlg(const char *title, Panel *p,
                 else
                     g_critical("value for CONF_TYPE_EXTERNAL is not a GtkWidget");
                 break;
-            case CONF_TYPE_COLOR:
+            case CONF_TYPE_COLOUR:
                 {
                 entry = gtk_color_button_new();
-#if GTK_CHECK_VERSION(3, 0, 0)
                 gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (entry), val);
-#else
-                gtk_color_button_set_color (GTK_COLOR_BUTTON (entry), val);
-#endif
                 g_signal_connect (entry, "color-set", G_CALLBACK (on_color_button_set), val);
                 }
                 break;
@@ -1786,24 +1778,21 @@ static GtkWidget *_lxpanel_generic_config_dlg(const char *title, Panel *p,
                     entry = gtk_radio_button_new_with_label (NULL, name);
                     g_signal_connect (entry, "toggled", G_CALLBACK(on_radio_changed), val);
                     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (entry), * (int *) val == rb_group);
-#if !GTK_CHECK_VERSION(3, 0, 0)
-                    gtk_radio_button_group (GTK_RADIO_BUTTON (entry));
-#endif
                     lastbtn = entry;
                     rb_group++;
                 }
                 else
                 {
-#if GTK_CHECK_VERSION(3, 0, 0)
                     entry = gtk_radio_button_new_with_label (gtk_radio_button_get_group (GTK_RADIO_BUTTON (lastbtn)), name);
-#else
-                    entry = gtk_radio_button_new_with_label (gtk_radio_button_group (GTK_RADIO_BUTTON (lastbtn)), name);
-#endif
                     g_signal_connect (entry, "toggled", G_CALLBACK(on_radio_changed), val);
                     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (entry), * (int *) val == rb_group);
                     lastbtn = entry;
                     rb_group++;
                 }
+                break;
+            case CONF_TYPE_FONT:
+            case CONF_TYPE_LABEL:
+            case CONF_TYPE_NONE:
                 break;
         }
         if( entry )
@@ -1812,11 +1801,7 @@ static GtkWidget *_lxpanel_generic_config_dlg(const char *title, Panel *p,
                 gtk_box_pack_start( dlg_vbox, entry, FALSE, FALSE, 2 );
             else
             {
-#if GTK_CHECK_VERSION(3, 0, 0)
                 GtkWidget* hbox = gtk_box_new( GTK_ORIENTATION_HORIZONTAL, 2 );
-#else
-                GtkWidget* hbox = gtk_hbox_new( FALSE, 2 );
-#endif
                 gtk_box_pack_start( GTK_BOX(hbox), gtk_label_new(name), FALSE, FALSE, 2 );
                 gtk_box_pack_start( GTK_BOX(hbox), entry, TRUE, TRUE, 2 );
                 gtk_box_pack_start( dlg_vbox, hbox, FALSE, FALSE, 2 );
@@ -1878,6 +1863,156 @@ GtkWidget *lxpanel_generic_config_dlg(const char *title, LXPanel *panel,
     va_start(args, name);
     dlg = _lxpanel_generic_config_dlg(title, panel->priv, apply_func, plugin, name, args);
     va_end(args);
+    return dlg;
+}
+
+GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
+                                      GSourceFunc apply_func, GtkWidget *plugin,
+                                      conf_table_t *conf_table)
+{
+    conf_table_t *cptr;
+    gpointer val;
+    const char *name;
+
+    if (plugin == NULL)
+        return NULL;
+
+    GtkWidget* dlg = gtk_dialog_new_with_buttons( title, NULL, 0,
+                                                  _("_OK"),
+                                                  GTK_RESPONSE_CLOSE,
+                                                  NULL );
+    GtkBox *dlg_vbox = GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dlg)));
+
+    panel_apply_icon(GTK_WINDOW(dlg));
+
+    if( apply_func )
+        g_object_set_data( G_OBJECT(dlg), "apply_func", apply_func );
+    g_object_set_data( G_OBJECT(dlg), "apply_func_data", plugin );
+
+    gtk_box_set_spacing( dlg_vbox, 4 );
+
+    int rb_group = 0;
+    GtkWidget *lastbtn = NULL;
+    cptr = conf_table;
+    while( cptr->type != CONF_TYPE_NONE )
+    {
+        GtkWidget* entry = NULL;
+        CONF_TYPE type = cptr->type;
+        name = cptr->label;
+        val = cptr->value;
+        if (rb_group && type != CONF_TYPE_RBUTTON) rb_group = 0;
+        if (type != CONF_TYPE_TRIM && val == NULL)
+            g_critical("NULL pointer for generic config dialog");
+        else switch( type )
+        {
+            case CONF_TYPE_STRING:
+            case CONF_TYPE_FILE_ENTRY: /* entry with a button to browse for files. */
+            case CONF_TYPE_DIRECTORY_ENTRY: /* entry with a button to browse for directories. */
+                entry = gtk_entry_new();
+                if(*cptr->value)
+                    gtk_entry_set_text( GTK_ENTRY(entry), *cptr->value);
+                gtk_entry_set_width_chars(GTK_ENTRY(entry), 40);
+                g_signal_connect( entry, "focus-out-event",
+                  G_CALLBACK(on_entry_focus_out_old), cptr->value );
+                break;
+            case CONF_TYPE_INT:
+                gtk_box_pack_start(dlg_vbox,
+                                   panel_config_int_button_new(name, val, 0, 1000),
+                                   FALSE, FALSE, 2);
+                break;
+            case CONF_TYPE_BOOL:
+                entry = gtk_check_button_new();
+                gtk_container_add(GTK_CONTAINER(entry), gtk_label_new(name));
+                gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(entry), *(gboolean*)val );
+                g_signal_connect( entry, "toggled",
+                  G_CALLBACK(on_toggle_changed), val );
+                break;
+            case CONF_TYPE_FILE:
+                entry = gtk_file_chooser_button_new(_("Select a file"), GTK_FILE_CHOOSER_ACTION_OPEN);
+                if( *(char**)val )
+                    gtk_file_chooser_set_filename( GTK_FILE_CHOOSER(entry), *(char**)val );
+                g_signal_connect( entry, "file-set",
+                  G_CALLBACK(on_file_chooser_btn_file_set), val );
+                break;
+            case CONF_TYPE_TRIM:
+                {
+                entry = gtk_label_new(NULL);
+                char *markup = g_markup_printf_escaped ("<span style=\"italic\">%s</span>", name );
+                gtk_label_set_markup (GTK_LABEL (entry), markup);
+                g_free (markup);
+                }
+                break;
+            case CONF_TYPE_EXTERNAL:
+                if (GTK_IS_WIDGET(val))
+                    gtk_box_pack_start(dlg_vbox, val, FALSE, FALSE, 2);
+                else
+                    g_critical("value for CONF_TYPE_EXTERNAL is not a GtkWidget");
+                break;
+            case CONF_TYPE_COLOUR:
+                {
+                entry = gtk_color_button_new();
+                gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (entry), val);
+                g_signal_connect (entry, "color-set", G_CALLBACK (on_color_button_set), val);
+                }
+                break;
+            case CONF_TYPE_RBUTTON:
+                if (!lastbtn)
+                {
+                    entry = gtk_radio_button_new_with_label (NULL, name);
+                    g_signal_connect (entry, "toggled", G_CALLBACK(on_radio_changed), val);
+                    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (entry), * (int *) val == rb_group);
+                    lastbtn = entry;
+                    rb_group++;
+                }
+                else
+                {
+                    entry = gtk_radio_button_new_with_label (gtk_radio_button_get_group (GTK_RADIO_BUTTON (lastbtn)), name);
+                    g_signal_connect (entry, "toggled", G_CALLBACK(on_radio_changed), val);
+                    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (entry), * (int *) val == rb_group);
+                    lastbtn = entry;
+                    rb_group++;
+                }
+                break;
+            case CONF_TYPE_FONT:
+            case CONF_TYPE_LABEL:
+            case CONF_TYPE_NONE:
+                break;
+        }
+        if( entry )
+        {
+            if(( type == CONF_TYPE_BOOL ) || ( type == CONF_TYPE_TRIM ) || (type == CONF_TYPE_RBUTTON))
+                gtk_box_pack_start( dlg_vbox, entry, FALSE, FALSE, 2 );
+            else
+            {
+                GtkWidget* hbox = gtk_box_new( GTK_ORIENTATION_HORIZONTAL, 2 );
+                gtk_box_pack_start( GTK_BOX(hbox), gtk_label_new(name), FALSE, FALSE, 2 );
+                gtk_box_pack_start( GTK_BOX(hbox), entry, TRUE, TRUE, 2 );
+                gtk_box_pack_start( dlg_vbox, hbox, FALSE, FALSE, 2 );
+                if ((type == CONF_TYPE_FILE_ENTRY) || (type == CONF_TYPE_DIRECTORY_ENTRY))
+                {
+                    GtkWidget* browse = gtk_button_new_with_mnemonic(_("_Browse"));
+                    gtk_box_pack_start( GTK_BOX(hbox), browse, TRUE, TRUE, 2 );
+                    g_object_set_data(G_OBJECT(browse), "file-val", val);
+                    g_object_set_data(G_OBJECT(browse), "dlg", dlg);
+
+                    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+                    if (type == CONF_TYPE_DIRECTORY_ENTRY)
+                    {
+                      action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
+                    }
+
+                    g_object_set_data(G_OBJECT(browse), "chooser-action", GINT_TO_POINTER(action));
+                    g_signal_connect( browse, "clicked", G_CALLBACK(on_browse_btn_clicked), entry );
+                }
+            }
+        }
+        cptr++;
+    }
+
+    gtk_container_set_border_width( GTK_CONTAINER(dlg), 8 );
+
+    gtk_widget_show_all(GTK_WIDGET(dlg_vbox));
+
     return dlg;
 }
 

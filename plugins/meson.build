@@ -1,5 +1,4 @@
 pluginlib_sources = files(
-	'dclock.c',
 	'launchtaskbar.c',
 	'task-button.c',
 	'launch-button.c',
