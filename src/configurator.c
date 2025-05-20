@@ -1606,19 +1606,17 @@ static void on_file_chooser_btn_file_set(GtkFileChooser* btn, char** val)
     notify_apply_config( GTK_WIDGET(btn) );
 }
 
-#if GTK_CHECK_VERSION(3, 0, 0)
 static void on_color_button_set(GtkColorChooser* btn, char** val)
 {
     gtk_color_chooser_get_rgba (btn, (GdkRGBA *) val);
     notify_apply_config( GTK_WIDGET(btn) );
 }
-#else
-static void on_color_button_set(GtkColorButton* btn, char** val)
+
+static void on_font_button_set(GtkColorChooser* btn, char** val)
 {
-    gtk_color_button_get_color (btn, (GdkColor *) val);
+    *val = gtk_font_chooser_get_font (btn);
     notify_apply_config( GTK_WIDGET(btn) );
 }
-#endif
 
 static void on_browse_btn_clicked(GtkButton* btn, GtkEntry* entry)
 {
@@ -1955,6 +1953,13 @@ GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
                 g_signal_connect (entry, "color-set", G_CALLBACK (on_color_button_set), val);
                 }
                 break;
+            case CONF_TYPE_FONT:
+                {
+                entry = gtk_font_button_new();
+                gtk_font_chooser_set_font (GTK_FONT_CHOOSER (entry), *(char**)val );
+                g_signal_connect (entry, "font-set", G_CALLBACK (on_font_button_set), val);
+                }
+                break;
             case CONF_TYPE_RBUTTON:
                 if (!lastbtn)
                 {
@@ -1973,7 +1978,6 @@ GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
                     rb_group++;
                 }
                 break;
-            case CONF_TYPE_FONT:
             case CONF_TYPE_LABEL:
             case CONF_TYPE_NONE:
                 break;
