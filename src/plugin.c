@@ -937,8 +937,6 @@ void lxplug_read_settings (config_setting_t *settings, conf_table_t *conf_table)
             case CONF_TYPE_FONT :
                 if (config_setting_lookup_string (settings, cptr->name, &str))
                     *(cptr->value) = g_strdup (str);
-                else
-                    *(cptr->value) = g_strdup ("");
                 break;
 
             case CONF_TYPE_COLOUR :
