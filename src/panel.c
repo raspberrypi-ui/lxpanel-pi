@@ -62,7 +62,7 @@
 #include "dbg.h"
 #include "gtk-compat.h"
 
-gchar *cprofile = "default";
+gchar *cprofile = "LXDE-pi";
 
 GSList* all_panels = NULL;  /* a single-linked list storing all panels */
 
