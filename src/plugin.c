@@ -925,12 +925,12 @@ void lxplug_read_settings (config_setting_t *settings, conf_table_t *conf_table)
         {
             case CONF_TYPE_BOOL :
                 if (config_setting_lookup_int (settings, cptr->name, &val))
-                    *(cptr->value) = val ? 1 : 0;
+                    *(cptr->value) = (void *) ((long) (val ? 1 : 0));
                 break;
 
             case CONF_TYPE_INT :
                 if (config_setting_lookup_int (settings, cptr->name, &val))
-                    *(cptr->value) = val;
+                    *(cptr->value) = (void *) ((long) val);
                 break;
 
             case CONF_TYPE_STRING :
@@ -943,7 +943,7 @@ void lxplug_read_settings (config_setting_t *settings, conf_table_t *conf_table)
 
             case CONF_TYPE_COLOUR :
                 if (config_setting_lookup_string (settings, cptr->name, &str))
-                    gdk_rgba_parse (cptr->value, str);
+                    gdk_rgba_parse ((GdkRGBA *) cptr->value, str);
                 break;
 
             case CONF_TYPE_RBUTTON :
@@ -963,7 +963,7 @@ void lxplug_write_settings (config_setting_t *settings, conf_table_t *conf_table
         {
             case CONF_TYPE_BOOL :
             case CONF_TYPE_INT :
-                config_group_set_int (settings, cptr->name, (int) *cptr->value);
+                config_group_set_int (settings, cptr->name, (int) ((long) *cptr->value));
                 break;
 
             case CONF_TYPE_STRING :
@@ -973,7 +973,9 @@ void lxplug_write_settings (config_setting_t *settings, conf_table_t *conf_table
                 break;
 
             case CONF_TYPE_COLOUR :
-                config_group_set_string (settings, cptr->name, gdk_rgba_to_string ((GdkRGBA *) cptr->value));
+                char *str = gdk_rgba_to_string ((GdkRGBA *) cptr->value);
+                config_group_set_string (settings, cptr->name, str);
+                g_free (str);
                 break;
 
             case CONF_TYPE_RBUTTON :

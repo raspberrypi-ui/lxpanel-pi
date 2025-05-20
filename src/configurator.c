@@ -1612,7 +1612,7 @@ static void on_color_button_set(GtkColorChooser* btn, char** val)
     notify_apply_config( GTK_WIDGET(btn) );
 }
 
-static void on_font_button_set(GtkColorChooser* btn, char** val)
+static void on_font_button_set(GtkFontChooser* btn, char** val)
 {
     *val = gtk_font_chooser_get_font (btn);
     notify_apply_config( GTK_WIDGET(btn) );
