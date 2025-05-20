@@ -924,9 +924,13 @@ void lxplug_read_settings (config_setting_t *settings, conf_table_t *conf_table)
         switch (cptr->type)
         {
             case CONF_TYPE_BOOL :
+                if (config_setting_lookup_int (settings, cptr->name, &val))
+                    *(cptr->value) = val ? 1 : 0;
+                break;
+
             case CONF_TYPE_INT :
                 if (config_setting_lookup_int (settings, cptr->name, &val))
-                    cptr->value = val;
+                    *(cptr->value) = val;
                 break;
 
             case CONF_TYPE_STRING :
@@ -959,7 +963,7 @@ void lxplug_write_settings (config_setting_t *settings, conf_table_t *conf_table
         {
             case CONF_TYPE_BOOL :
             case CONF_TYPE_INT :
-                //config_setting_lookup_int (settings, cptr->name, cptr->value);
+                config_group_set_int (settings, cptr->name, (int) *cptr->value);
                 break;
 
             case CONF_TYPE_STRING :

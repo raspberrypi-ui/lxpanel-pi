@@ -1910,10 +1910,10 @@ GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
             case CONF_TYPE_DIRECTORY_ENTRY: /* entry with a button to browse for directories. */
                 entry = gtk_entry_new();
                 if(*cptr->value)
-                    gtk_entry_set_text( GTK_ENTRY(entry), *cptr->value);
+                    gtk_entry_set_text( GTK_ENTRY(entry), *(char**)val );
                 gtk_entry_set_width_chars(GTK_ENTRY(entry), 40);
                 g_signal_connect( entry, "focus-out-event",
-                  G_CALLBACK(on_entry_focus_out_old), cptr->value );
+                  G_CALLBACK(on_entry_focus_out_old), val );
                 break;
             case CONF_TYPE_INT:
                 gtk_box_pack_start(dlg_vbox,
