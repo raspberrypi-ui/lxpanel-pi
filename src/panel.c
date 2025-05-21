@@ -1657,7 +1657,7 @@ GtkMenu* lxpanel_get_plugin_menu( LXPanel* panel, GtkWidget* plugin, gboolean us
     if( plugin )
     {
 #if GTK_CHECK_VERSION(3, 0, 0)
-        tmp = g_strdup_printf( _("Remove \"%s\" From Panel"), _(init->name) );
+        tmp = g_strdup_printf( _("Remove \"%s\" From Panel"), g_dgettext(init->gettext_package, init->name) );
         menu_item = gtk_menu_item_new_with_label( tmp );
         g_free( tmp );
 #else
