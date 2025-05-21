@@ -1,4 +1,12 @@
-project('lxpanel-pi', 'c')
+project('lxpanel-pi',
+        'c',
+        meson_version: '>=0.60.0',
+        default_options: [
+        'c_std=c11',
+        'warning_level=2',
+        'werror=false',
+        ],
+)
 
 share_dir = join_paths(get_option('prefix'), 'share')
 resource_dir = join_paths(share_dir, 'lxpanel-pi')
@@ -29,14 +37,9 @@ subdir('data')
 
 pkgconfig = import('pkgconfig')
 pkgconfig.generate(
-    version:      meson.project_version(),
     filebase:     meson.project_name(),
     name:         meson.project_name(),
     description: 'Panel for Raspberry Pi X desktop',
-    requires:     gtk,
-    subdirs:     'wf-panel-pi',
-    variables:    ['uidir=' + ui_dir,
-                   'sysconfdir=' + sysconf_dir,
-                   'resourcedir=' + resource_dir,
-                   'plugindir=${libdir}/lxpanel-pi']
-    )
+    subdirs:     'lxpanel-pi',
+    extra_cflags:'-DLXPLUG'
+)
