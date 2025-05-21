@@ -1574,10 +1574,10 @@ static void on_spin_changed( GtkSpinButton* spin, gpointer user_data )
     notify_apply_config( GTK_WIDGET(spin) );
 }
 
-static void on_toggle_changed( GtkToggleButton* btn, gpointer user_data )
+static void on_toggle_changed( GtkSwitch* btn, gboolean state, gpointer user_data )
 {
     gboolean* val = (gboolean*)user_data;
-    *val = gtk_toggle_button_get_active( btn );
+    *val = state;
     notify_apply_config( GTK_WIDGET(btn) );
 }
 
@@ -1870,7 +1870,7 @@ GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
 {
     conf_table_t *cptr;
     gpointer val;
-    const char *name;
+    char *name;
 
     if (plugin == NULL)
         return NULL;
@@ -1896,7 +1896,10 @@ GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
     {
         GtkWidget* entry = NULL;
         CONF_TYPE type = cptr->type;
-        name = cptr->label;
+        if (cptr->type == CONF_TYPE_LABEL)
+            name = g_strdup_printf ("%s", dgettext (PLUGIN_CLASS(plugin)->gettext_package, cptr->label));
+        else
+            name = g_strdup_printf ("%s:", dgettext (PLUGIN_CLASS(plugin)->gettext_package, cptr->label));
         val = cptr->value;
         if (rb_group && type != CONF_TYPE_RBUTTON) rb_group = 0;
         if (type != CONF_TYPE_TRIM && val == NULL)
@@ -1919,10 +1922,9 @@ GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
                                    FALSE, FALSE, 2);
                 break;
             case CONF_TYPE_BOOL:
-                entry = gtk_check_button_new();
-                gtk_container_add(GTK_CONTAINER(entry), gtk_label_new(name));
-                gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(entry), *(gboolean*)val );
-                g_signal_connect( entry, "toggled",
+                entry = gtk_switch_new();
+                gtk_switch_set_active( GTK_SWITCH(entry), *(gboolean*)val );
+                g_signal_connect( entry, "state-set",
                   G_CALLBACK(on_toggle_changed), val );
                 break;
             case CONF_TYPE_FILE:
@@ -1984,13 +1986,13 @@ GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
         }
         if( entry )
         {
-            if(( type == CONF_TYPE_BOOL ) || ( type == CONF_TYPE_TRIM ) || (type == CONF_TYPE_RBUTTON))
+            if(( type == CONF_TYPE_TRIM ) || (type == CONF_TYPE_RBUTTON))
                 gtk_box_pack_start( dlg_vbox, entry, FALSE, FALSE, 2 );
             else
             {
                 GtkWidget* hbox = gtk_box_new( GTK_ORIENTATION_HORIZONTAL, 2 );
                 gtk_box_pack_start( GTK_BOX(hbox), gtk_label_new(name), FALSE, FALSE, 2 );
-                gtk_box_pack_start( GTK_BOX(hbox), entry, TRUE, TRUE, 2 );
+                gtk_box_pack_end( GTK_BOX(hbox), entry, FALSE, FALSE, 2 );
                 gtk_box_pack_start( dlg_vbox, hbox, FALSE, FALSE, 2 );
                 if ((type == CONF_TYPE_FILE_ENTRY) || (type == CONF_TYPE_DIRECTORY_ENTRY))
                 {
@@ -2010,6 +2012,7 @@ GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
                 }
             }
         }
+        g_free (name);
         cptr++;
     }
 
