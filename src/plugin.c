@@ -425,7 +425,7 @@ void lxpanel_prepare_modules(void)
     lxpanel_plugin_qconf = g_quark_from_static_string("LXPanel::plugin-conf");
     lxpanel_plugin_qsize = g_quark_from_static_string("LXPanel::plugin-size");
 #ifndef DISABLE_PLUGINS_LOADING
-    fm_modules_add_directory(PACKAGE_LIB_DIR "/lxpanel/plugins");
+    fm_modules_add_directory(PACKAGE_LIB_DIR "/lxpanel-pi");
     fm_module_register_lxpanel_gtk();
 #endif
 }
