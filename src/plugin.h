@@ -436,6 +436,9 @@ extern gboolean is_pi (void);
 extern void lxplug_read_settings (config_setting_t *settings, conf_table_t *conf_table);
 extern void lxplug_write_settings (config_setting_t *settings, conf_table_t *conf_table);
 
+#define wrap_notify(panel,msg) lxpanel_notify(panel,msg)
+#define wrap_critical(panel,msg) lxpanel_notify(panel,msg)
+#define wrap_notify_clear(seq) lxpanel_notify_clear(seq)
 #define wrap_new_menu_item(plugin,text,maxlen,icon) lxpanel_plugin_new_menu_item(plugin->panel,text,maxlen,icon)
 #define wrap_set_menu_icon(plugin,image,icon) lxpanel_plugin_set_menu_icon(plugin->panel,image,icon)
 #define wrap_set_taskbar_icon(plugin,image,icon) lxpanel_plugin_set_taskbar_icon(plugin->panel,image,icon)
