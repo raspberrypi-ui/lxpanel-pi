@@ -87,5 +87,6 @@ LXPanelPluginInit lxpanel_static_plugin_separator = {
     .description = N_("Add a separator to the panel"),
 
     .new_instance = separator_constructor,
-    .reconfigure = separator_reconfigure
+    .reconfigure = separator_reconfigure,
+    .gettext_package = GETTEXT_PACKAGE
 };

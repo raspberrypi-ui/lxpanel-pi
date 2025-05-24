@@ -660,11 +660,11 @@ msgstr "Display workspace number, by cmeury@users.sf.net"
 
 #: ../plugins/launchtaskbar.c:1845 ../plugins/launchtaskbar.c:2493
 msgid "Application Launch Bar"
-msgstr "Application Launch Bar"
+msgstr "Launcher"
 
 #: ../plugins/launchtaskbar.c:1848 ../plugins/launchtaskbar.c:2503
 msgid "Task Bar (Window List)"
-msgstr "Task Bar (Window List)"
+msgstr "Window List"
 
 #: ../plugins/launchtaskbar.c:2026
 msgid "A_dd to Launcher"
