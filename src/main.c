@@ -522,7 +522,8 @@ static void init_static_plugins(void)
 #endif
 
 #ifdef STATIC_LAUNCHTASKBAR
-    REGISTER_STATIC_MODULE(launchtaskbar);
+    REGISTER_STATIC_MODULE(launchbar);
+    REGISTER_STATIC_MODULE(taskbar);
 #endif
 
 #ifdef STATIC_TRAY

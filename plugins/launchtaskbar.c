@@ -2498,8 +2498,8 @@ static GtkWidget *taskbar_constructor(LXPanel *panel, config_setting_t *settings
     return _launchtaskbar_constructor(panel, settings, TASKBAR);
 }
 
-static LXPanelPluginInit _launchbar_init = {
-    .name = N_("Application Launch Bar"),
+LXPanelPluginInit lxpanel_static_plugin_launchbar = {
+    .name = N_("Launcher"),
     .description = N_("Bar with buttons to launch application"),
 
     .new_instance = launchbar_constructor,
@@ -2508,8 +2508,8 @@ static LXPanelPluginInit _launchbar_init = {
     .control = launchtaskbar_control
 };
 
-static LXPanelPluginInit _taskbar_init = {
-    .name = N_("Task Bar (Window List)"),
+LXPanelPluginInit lxpanel_static_plugin_taskbar = {
+    .name = N_("Window List"),
     .description = N_("Taskbar shows all opened windows and allows to iconify them, shade or get focus"),
 
     .expand_available = TRUE,
@@ -2523,8 +2523,8 @@ static LXPanelPluginInit _taskbar_init = {
 
 static void launchtaskbar_init(void)
 {
-    lxpanel_register_plugin_type("launchbar", &_launchbar_init);
-    lxpanel_register_plugin_type("taskbar", &_taskbar_init);
+    lxpanel_register_plugin_type("launchbar", &lxpanel_static_plugin_launchbar);
+    lxpanel_register_plugin_type("taskbar", &lxpanel_static_plugin_taskbar);
 }
 
 /* Plugin descriptor. */
