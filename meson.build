@@ -2,7 +2,6 @@ project('lxpanel-pi',
         'c',
         meson_version: '>=0.60.0',
         default_options: [
-        'c_std=c11',
         'warning_level=2',
         'werror=false',
         ],
