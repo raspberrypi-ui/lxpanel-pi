@@ -751,8 +751,7 @@ LXPanelPluginInit lxpanel_static_plugin_tray = {
     .one_per_system = TRUE,
 
     .new_instance = tray_constructor,
-    .reconfigure = tray_panel_configuration_changed,
-    .gettext_package = GETTEXT_PACKAGE
+    .reconfigure = tray_panel_configuration_changed
 };
 
 /* vim: set sw=4 sts=4 et : */

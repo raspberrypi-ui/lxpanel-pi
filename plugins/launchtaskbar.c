@@ -2505,8 +2505,7 @@ LXPanelPluginInit lxpanel_static_plugin_launchbar = {
     .new_instance = launchbar_constructor,
     .config = launchtaskbar_configure,
     .reconfigure = launchtaskbar_panel_configuration_changed,
-    .control = launchtaskbar_control,
-    .gettext_package = GETTEXT_PACKAGE
+    .control = launchtaskbar_control
 };
 
 LXPanelPluginInit lxpanel_static_plugin_taskbar = {
@@ -2519,8 +2518,7 @@ LXPanelPluginInit lxpanel_static_plugin_taskbar = {
     .new_instance = taskbar_constructor,
     .config = launchtaskbar_configure,
     .reconfigure = launchtaskbar_panel_configuration_changed,
-    .control = launchtaskbar_control,
-    .gettext_package = GETTEXT_PACKAGE
+    .control = launchtaskbar_control
 };
 
 static void launchtaskbar_init(void)
