@@ -1270,9 +1270,7 @@ static gboolean task_button_button_press_event(GtkWidget *widget, GdkEventButton
     GtkWidget *menu, *mi;
     TaskButton *tb = PANEL_TASK_BUTTON(widget);
 
-#ifdef ENABLE_NLS
     textdomain ( GETTEXT_PACKAGE );
-#endif
     if (event->button == 3) /* Right click */
     {
         if (tb->n_visible > 1)

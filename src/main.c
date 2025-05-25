@@ -728,11 +728,9 @@ int main(int argc, char *argv[], char *env[])
     gtk_init(&argc, &argv);
     keybinder_init();
 
-#ifdef ENABLE_NLS
     bindtextdomain ( GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR );
     bind_textdomain_codeset ( GETTEXT_PACKAGE, "UTF-8" );
     textdomain ( GETTEXT_PACKAGE );
-#endif
 
     XSetLocaleModifiers("");
     XSetErrorHandler((XErrorHandler) panel_handle_x_error);
