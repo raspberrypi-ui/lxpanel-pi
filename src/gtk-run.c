@@ -275,13 +275,13 @@ static void setup_auto_complete( GtkEntry* entry )
     }
 }
 
+#ifndef DISABLE_MENU
 static void mc_unref (gpointer data, gpointer user_data)
 {
     MenuCacheItem* item = (MenuCacheItem *) data;
     menu_cache_item_unref (item);
 }
 
-#ifndef DISABLE_MENU
 static void reload_apps(MenuCache* cache, gpointer user_data)
 {
     g_debug("reload apps!");

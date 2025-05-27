@@ -290,40 +290,7 @@ static void process_client_msg ( XClientMessageEvent* ev )
                 break;
             plugin_type = g_strndup(&ev->data.b[2], 18);
             command = strchr(plugin_type, '\t');
-            if (!strncmp (plugin_type, "volumealsabt", 12))
-            {
-                /* special case - message volume plugin on all panels, not just the first one found */
-                *command++ = '\0';
-                GSList *l;
-                for (l = all_panels; l; l = l->next)
-                {
-                    LXPanel *p = (LXPanel *) l->data;
-                    if (p != NULL)
-                    {
-                        GList *plugins, *pl;
-                        const LXPanelPluginInit *init;
-                        GtkWidget *plugin = NULL;
-
-                        init = g_hash_table_lookup (lxpanel_get_all_types (), plugin_type);
-                        if (init)
-                        {
-                            plugins = gtk_container_get_children (GTK_CONTAINER (p->priv->box));
-                            for (pl = plugins; pl; pl = pl->next)
-                            {
-                                if (init == PLUGIN_CLASS (pl->data))
-                                {
-                                    plugin = pl->data;
-                                    break;
-                                }
-                            }
-                            g_list_free (plugins);
-
-                            if (plugin && init->control) init->control (plugin, command);
-                        }
-                    }
-                }
-            }
-            else if (command) do /* use do{}while(0) to enable break */
+            if (command) do /* use do{}while(0) to enable break */
             {
                 LXPanel *p;
                 GSList *l;
