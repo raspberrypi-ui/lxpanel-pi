@@ -156,7 +156,7 @@ static void process_client_msg ( XClientMessageEvent* ev )
                         // try to find a config file...
                         FILE *fp;
                         char *file;
-                        file = g_build_filename (g_get_user_config_dir(), "lxpanel", cprofile, "panels", p->priv->name, NULL);
+                        file = g_build_filename (g_get_user_config_dir(), CONFIG_DIR, cprofile, "panels", p->priv->name, NULL);
                         fp = fopen (file, "rb");
                         g_free (file);
                         if (!fp)
@@ -166,7 +166,7 @@ static void process_client_msg ( XClientMessageEvent* ev )
                             {
                                 while (dir[0])
                                 {
-                                    file = g_build_filename (dir[0], "lxpanel", cprofile, "panels", p->priv->name, NULL);
+                                    file = g_build_filename (dir[0], CONFIG_DIR, cprofile, "panels", p->priv->name, NULL);
                                     fp = fopen (file, "rb");
                                     g_free (file);
                                     if (fp) break;
@@ -656,7 +656,7 @@ static gboolean start_all_panels( )
 
 static void _ensure_user_config_dirs(void)
 {
-    char *dir = g_build_filename(g_get_user_config_dir(), "lxpanel", cprofile,
+    char *dir = g_build_filename(g_get_user_config_dir(), CONFIG_DIR, cprofile,
                                  "panels", NULL);
 
     /* make sure the private profile and panels dir exists */

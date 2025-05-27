@@ -32,6 +32,8 @@
 
 G_BEGIN_DECLS
 
+#define CONFIG_DIR "lxpanel-pi"
+
 /* New plugins style which uses FmModule loader, our module type is "lxpanel_gtk" */
 
 #define FM_MODULE_lxpanel_gtk_VERSION 1 /* version of this API */

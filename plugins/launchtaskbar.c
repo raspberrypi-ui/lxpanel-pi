@@ -1088,7 +1088,7 @@ static GtkWidget *_launchtaskbar_constructor(LXPanel *panel, config_setting_t *s
     /* Special cases key file */
     ltbp->p_key_file_special_cases = g_key_file_new();
     gchar *special_cases_filepath = g_build_filename(g_get_user_config_dir(),
-                                                     "lxpanel", "launchtaskbar.cfg", NULL);
+                                                     CONFIG_DIR, "launchtaskbar.cfg", NULL);
     if (!g_key_file_load_from_file(ltbp->p_key_file_special_cases,
                                    special_cases_filepath,
                                    G_KEY_FILE_KEEP_COMMENTS, NULL))
