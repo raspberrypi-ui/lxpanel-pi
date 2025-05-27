@@ -185,8 +185,10 @@ _skip_all:
                 c++;
             if (!*c)
                 break;
-            /* continue with EOL */
-        case '\n':
+            name = NULL;
+            c++;
+            break;
+         case '\n':
             name = NULL;
             c++;
             break;

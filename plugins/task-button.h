@@ -70,7 +70,7 @@ gboolean task_button_has_window(TaskButton *button, Window win);
 void task_button_update_windows_list(TaskButton *button, Window *list, gint n);
 /* returns TRUE if found and updated */
 gboolean task_button_window_xprop_changed(TaskButton *button, Window win, Atom atom);
-gboolean task_button_window_focus_changed(TaskButton *button, Window *win);
+void task_button_window_focus_changed(GtkWidget *widget, gpointer data);
 gboolean task_button_window_reconfigured(TaskButton *button, Window win);
 /* updates rendering options */
 void task_button_update(TaskButton *button, gint desk, gint desks,

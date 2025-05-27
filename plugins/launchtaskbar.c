@@ -222,6 +222,12 @@ static char *task_get_cmdline(Window win, LaunchTaskBarPlugin *ltbp)
     return cmdline;
 }
 
+static void mc_unref (gpointer data, gpointer user_data)
+{
+    MenuCacheItem* item = (MenuCacheItem *) data;
+    menu_cache_item_unref (item);
+}
+
 static FmPath *f_find_menu_launchbutton_recursive(Window win, LaunchTaskBarPlugin *ltbp)
 {
     MenuCache *mc;
@@ -281,7 +287,7 @@ static FmPath *f_find_menu_launchbutton_recursive(Window win, LaunchTaskBarPlugi
         path = fm_path_new_relative(fm_path_get_apps_menu(), str_path+13); /* skip /Applications */
         g_free(str_path);
     }
-    g_slist_foreach(apps, (GFunc)menu_cache_item_unref, NULL);
+    g_slist_foreach(apps, mc_unref, NULL);
     g_slist_free(apps);
     menu_cache_unref(mc);
     g_debug("f_find_menu_launchbutton_recursive: search '%s' found=%d", exec_bin, (path != NULL));
@@ -1120,15 +1126,16 @@ static GtkWidget *_launchtaskbar_constructor(LXPanel *panel, config_setting_t *s
         launchtaskbar_constructor_launch(ltbp);
         gtk_widget_set_name(p, "launchbar");
         break;
-    default:
-        ltbp->mode = LAUNCHTASKBAR; /* reset invalid value */
-    case LAUNCHTASKBAR:
-        launchtaskbar_constructor_launch(ltbp);
-        gtk_widget_set_name(p, "launchtaskbar");
     case TASKBAR:
         launchtaskbar_constructor_task(ltbp);
-        if (ltbp->mode == TASKBAR)
-            gtk_widget_set_name(p, "taskbar");
+        gtk_widget_set_name(p, "taskbar");
+        break;
+    default:
+        ltbp->mode = LAUNCHTASKBAR;
+        launchtaskbar_constructor_launch(ltbp);
+        launchtaskbar_constructor_task(ltbp);
+        gtk_widget_set_name(p, "launchtaskbar");
+        break;
     }
 
     return p;
@@ -1448,7 +1455,6 @@ static void on_combobox_mode_changed(GtkComboBox *p_combobox, gpointer p_data)
         break;
     default:
         ltbp->mode = LAUNCHTASKBAR;
-    case LAUNCHTASKBAR:
         launchtaskbar_constructor_launch(ltbp);
         launchtaskbar_constructor_task(ltbp);
         plugin_set_expand_status(ltbp, TRUE);
@@ -2187,6 +2193,11 @@ static void taskbar_add_new_window(LaunchTaskBarPlugin * tb, Window win, GList *
  * handlers for NET actions                          *
  *****************************************************/
 
+static void destroy_widget (GtkWidget *widget, gpointer data)
+{
+    gtk_widget_destroy (widget);
+}
+
 /* Handler for "client-list" event from root window listener. */
 static gboolean do_client_list(gpointer data)
 {
@@ -2239,7 +2250,7 @@ static gboolean do_client_list(gpointer data)
 
     else /* clear taskbar */
         gtk_container_foreach(GTK_CONTAINER(tb->tb_icon_grid),
-                              (GtkCallback)gtk_widget_destroy, NULL);
+                              destroy_widget, NULL);
 
     return FALSE;
 }
@@ -2282,7 +2293,7 @@ static void taskbar_net_active_window(GtkWidget * widget, LaunchTaskBarPlugin * 
     Window * f = get_xaproperty(GDK_ROOT_WINDOW(), a_NET_ACTIVE_WINDOW, XA_WINDOW, 0);
 
     gtk_container_foreach(GTK_CONTAINER(tb->tb_icon_grid),
-                          (GtkCallback)task_button_window_focus_changed, f);
+                          task_button_window_focus_changed, f);
     if (f != NULL)
         XFree(f);
 }

@@ -73,7 +73,7 @@ Command commands[] = {
     { "run", N_("Run"), gtk_run },
     { "restart", N_("Restart"), restart },
     { "logout", N_("Logout"), logout },
-    { NULL, NULL },
+    { NULL, NULL, NULL },
 };
 
 void restart(void)
@@ -697,6 +697,12 @@ static void _ensure_user_config_dirs(void)
     g_free(dir);
 }
 
+static void destroy_widget (gpointer data, gpointer user_data)
+{
+    GtkWidget *widget = (GtkWidget *) data;
+    gtk_widget_destroy (widget);
+}
+
 int main(int argc, char *argv[], char *env[])
 {
     int i;
@@ -807,7 +813,7 @@ int main(int argc, char *argv[], char *env[])
     gdk_window_remove_filter(gdk_get_default_root_window (), (GdkFilterFunc)panel_event_filter, NULL);
 
     /* destroy all panels */
-    g_slist_foreach( all_panels, (GFunc) gtk_widget_destroy, NULL );
+    g_slist_foreach( all_panels, destroy_widget, NULL );
     g_slist_free( all_panels );
     all_panels = NULL;
     g_free( cfgfile );

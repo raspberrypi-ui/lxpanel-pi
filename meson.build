@@ -20,6 +20,7 @@ add_project_arguments('-DPACKAGE_LOCALE_DIR="' + share_dir + '/locale"', languag
 add_project_arguments('-DPACKAGE_LIB_DIR="' + get_option ('prefix') + '/' + get_option('libdir') + '"', language : [ 'c' ])
 add_project_arguments('-DGETTEXT_PACKAGE="' + gettext_package + '"', language : [ 'c' ])
 add_project_arguments('-DVERSION="1.0"', language : [ 'c' ])
+add_project_arguments('-Wno-unused-parameter', language : [ 'c' ])
 
 gtk = dependency ('gtk+-3.0')
 keybind = dependency ('keybinder-3.0')

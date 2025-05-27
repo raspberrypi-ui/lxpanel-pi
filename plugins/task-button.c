@@ -718,6 +718,11 @@ static GdkPixbuf * apply_mask(GdkPixbuf * pixbuf, GdkPixbuf * mask)
     return with_alpha;
 }
 
+static void pixbuf_free (guchar *pixels, gpointer data)
+{
+    g_free (pixels);
+}
+
 /* Get an icon from the window manager for a task, and scale it to a specified size. */
 static GdkPixbuf * get_wm_icon(Window task_win, guint required_width,
                                guint required_height, Atom source,
@@ -836,7 +841,7 @@ static GdkPixbuf * get_wm_icon(Window task_win, guint required_width,
                     GDK_COLORSPACE_RGB,
                     TRUE, 8,    /* has_alpha, bits_per_sample */
                     max_w, max_h, max_w * 4,
-                    (GdkPixbufDestroyNotify) g_free,
+                    pixbuf_free,
                     NULL);
                 possible_source = a_NET_WM_ICON;
             }
@@ -1586,13 +1591,15 @@ gboolean task_button_window_xprop_changed(TaskButton *button, Window win, Atom a
     return TRUE;
 } */
 
-gboolean task_button_window_focus_changed(TaskButton *button, Window *win)
+void task_button_window_focus_changed(GtkWidget *widget, gpointer data)
 {
     GList *l;
     TaskDetails *details;
     gboolean res = FALSE;
+    TaskButton *button = (TaskButton *) widget;
+    Window *win = (Window *) data;
 
-    g_return_val_if_fail(PANEL_IS_TASK_BUTTON(button), FALSE);
+    g_return_if_fail(PANEL_IS_TASK_BUTTON(button));
 
     for (l = button->details; l; l = l->next)
     {
@@ -1622,7 +1629,6 @@ gboolean task_button_window_focus_changed(TaskButton *button, Window *win)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
         // FIXME: test if need to update menu
     }
-    return res;
 }
 
 /* update internal data */

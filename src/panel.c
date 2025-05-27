@@ -1114,9 +1114,11 @@ static void ah_state_set(LXPanel *panel, PanelAHState ah_state)
             if (p->hide_timeout)
                 g_source_remove(p->hide_timeout);
             p->hide_timeout = 0;
-            /* continue with setting visible */
+            ah_state_set(panel, AH_STATE_VISIBLE);
+            break;
         case AH_STATE_HIDDEN:
             ah_state_set(panel, AH_STATE_VISIBLE);
+            break;
         }
     }
     RET();

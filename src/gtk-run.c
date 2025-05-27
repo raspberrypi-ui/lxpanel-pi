@@ -191,9 +191,14 @@ static void setup_auto_complete_with_data(ThreadData* data)
     g_object_unref( comp );
 }
 
+static void file_free (gpointer data, gpointer user_data)
+{
+    g_free (data);
+}
+
 static void thread_data_free(ThreadData* data)
 {
-    g_slist_foreach(data->files, (GFunc)g_free, NULL);
+    g_slist_foreach(data->files, file_free, NULL);
     g_slist_free(data->files);
     g_slice_free(ThreadData, data);
 }
@@ -270,13 +275,19 @@ static void setup_auto_complete( GtkEntry* entry )
     }
 }
 
+static void mc_unref (gpointer data, gpointer user_data)
+{
+    MenuCacheItem* item = (MenuCacheItem *) data;
+    menu_cache_item_unref (item);
+}
+
 #ifndef DISABLE_MENU
 static void reload_apps(MenuCache* cache, gpointer user_data)
 {
     g_debug("reload apps!");
     if(app_list)
     {
-        g_slist_foreach(app_list, (GFunc)menu_cache_item_unref, NULL);
+        g_slist_foreach(app_list, mc_unref, NULL);
         g_slist_free(app_list);
     }
     app_list = menu_cache_list_all_apps(cache);
@@ -304,7 +315,7 @@ static void on_response( GtkDialog* dlg, gint response, gpointer user_data )
 
 #ifndef DISABLE_MENU
     /* free app list */
-    g_slist_foreach(app_list, (GFunc)menu_cache_item_unref, NULL);
+    g_slist_foreach(app_list, mc_unref, NULL);
     g_slist_free(app_list);
     app_list = NULL;
 

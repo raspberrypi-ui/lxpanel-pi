@@ -69,8 +69,8 @@ struct _FbEv {
 /* it is created in main.c */
 FbEv *fbev = NULL;
 
-static void fb_ev_class_init (FbEvClass *klass);
-static void fb_ev_init (FbEv *monitor);
+static void fb_ev_class_init (gpointer g_class, gpointer class_data);
+static void fb_ev_init (GTypeInstance *instance, gpointer g_class);
 static void fb_ev_finalize (GObject *object);
 
 static void ev_current_desktop(FbEv *ev, gpointer p);
@@ -99,6 +99,7 @@ fb_ev_get_type (void)
             sizeof (FbEv),
             0,              /* n_preallocs */
             (GInstanceInitFunc) fb_ev_init,
+            NULL
         };
 
         object_type = g_type_register_static (
@@ -111,8 +112,9 @@ fb_ev_get_type (void)
 
 
 static void
-fb_ev_class_init (FbEvClass *klass)
+fb_ev_class_init (gpointer g_class, gpointer class_data)
 {
+    FbEvClass *klass = (FbEvClass *) g_class;
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
     signals [EV_CURRENT_DESKTOP] =
@@ -182,8 +184,9 @@ fb_ev_class_init (FbEvClass *klass)
 }
 
 static void
-fb_ev_init (FbEv *ev)
+fb_ev_init (GTypeInstance *instance, gpointer g_class)
 {
+    FbEv *ev = (FbEv *) instance;
     ev->number_of_desktops = -1;
     ev->current_desktop = -1;
     ev->active_window = None;
