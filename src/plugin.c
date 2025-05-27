@@ -40,11 +40,8 @@
 //#define DEBUG
 #include "private.h"
 #include "dbg.h"
-#include "gtk-compat.h"
 
-#if GTK_CHECK_VERSION(3, 0, 0)
 #include <gtk/gtkx.h>
-#endif
 
 static void plugin_class_unref(PluginClass * pc);
 
@@ -199,18 +196,9 @@ void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
             if (gtk_widget_get_realized(w))
             {
                 GdkWindow *window = gtk_widget_get_window(w);
-#if !GTK_CHECK_VERSION(3, 0, 0)
-                gdk_window_set_back_pixmap(window, NULL, TRUE);
-#endif
                 if ((p->background) || (p->transparent))
                     /* Reset background for the child, using background of panel */
                     gdk_window_invalidate_rect(window, NULL, TRUE);
-#if !GTK_CHECK_VERSION(3, 0, 0)
-                else
-                    /* Set background according to the current GTK style. */
-                    gtk_style_set_background(gtk_widget_get_style(w), window,
-                                             GTK_STATE_NORMAL);
-#endif
             }
         }
 
@@ -218,13 +206,7 @@ void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
         if (GTK_IS_SOCKET(w))
         {
             gtk_widget_hide(w);
-#if !GTK_CHECK_VERSION(3, 0, 0)
-            gdk_window_process_all_updates();
-#endif
             gtk_widget_show(w);
-#if !GTK_CHECK_VERSION(3, 0, 0)
-            gdk_window_process_all_updates();
-#endif
         }
 
         /* Recursively process all children of a container. */
@@ -245,11 +227,7 @@ static gboolean lxpanel_plugin_button_press_event(GtkWidget *plugin, GdkEventBut
 		// we need to switch back here...
 		textdomain ( GETTEXT_PACKAGE );
         GtkMenu* popup = (GtkMenu*)lxpanel_get_plugin_menu(panel, plugin, FALSE);
-#if GTK_CHECK_VERSION(3, 0, 0)
         gtk_menu_popup_at_pointer (popup, (GdkEvent *) event);
-#else
-        gtk_menu_popup(popup, NULL, NULL, NULL, NULL, event->button, event->time);
-#endif
         return TRUE;
     }
     return FALSE;
@@ -268,11 +246,7 @@ void lxpanel_plugin_popup_set_position_helper(LXPanel * p, GtkWidget * near, Gtk
     GtkAllocation allocation;
     GtkAllocation popup_req;
     GdkScreen *screen = NULL;
-#if GTK_CHECK_VERSION(3, 0, 0)
     GdkMonitor *monitor;
-#else
-    gint monitor;
-#endif
 
     /* Get the allocation of the popup menu. */
     gtk_widget_realize(popup);
@@ -280,10 +254,6 @@ void lxpanel_plugin_popup_set_position_helper(LXPanel * p, GtkWidget * near, Gtk
     if (gtk_widget_is_toplevel(popup))
     {
         GdkRectangle extents;
-        /* FIXME: can we wait somehow for WM drawing decorations? */
-#if !GTK_CHECK_VERSION(3, 0, 0)
-        gdk_window_process_all_updates();
-#endif
         gdk_window_get_frame_extents(gtk_widget_get_window(popup), &extents);
         popup_req.width = extents.width;
         popup_req.height = extents.height;
@@ -315,13 +285,8 @@ void lxpanel_plugin_popup_set_position_helper(LXPanel * p, GtkWidget * near, Gtk
     else
         /* panel as a GtkWindow always has a screen */
         screen = gtk_widget_get_screen(GTK_WIDGET(p));
-#if GTK_CHECK_VERSION(3, 0, 0)
     monitor = gdk_display_get_monitor_at_point (gdk_screen_get_display (screen), x, y);
     gdk_monitor_get_workarea (monitor, &allocation);
-#else
-    monitor = gdk_screen_get_monitor_at_point(screen, x, y);
-    gdk_screen_get_monitor_geometry(screen, monitor, &allocation);
-#endif
     x = CLAMP(x, allocation.x, allocation.x + allocation.width - popup_req.width);
     y = CLAMP(y, allocation.y, allocation.y + allocation.height - popup_req.height);
 

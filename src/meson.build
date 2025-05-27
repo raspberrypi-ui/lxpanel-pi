@@ -14,7 +14,6 @@ panellib_sources = files(
 )
 
 panel_sources = files(
-  'bg.c',
   'gtk-run.c',
   'main.c',
   'menu-policy.c'

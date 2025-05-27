@@ -43,7 +43,6 @@
 #endif
 #include <libfm/fm-gtk.h>
 
-#include "gtk-compat.h"
 
 static GtkWidget* win = NULL; /* the run dialog */
 #ifndef DISABLE_MENU
@@ -341,11 +340,7 @@ static void on_entry_changed( GtkEntry* entry, GtkImage* img )
     }
     else
     {
-#if GTK_CHECK_VERSION(3, 0, 0)
         gtk_image_set_from_icon_name(img, "gtk-execute", GTK_ICON_SIZE_DIALOG);
-#else
-        gtk_image_set_from_stock(img, GTK_STOCK_EXECUTE, GTK_ICON_SIZE_DIALOG);
-#endif
     }
 }
 #endif
@@ -388,19 +383,10 @@ void gtk_run()
     {
         win = gtk_dialog_new_with_buttons( _("Run"),
                                            NULL,
-                                           GTK_DIALOG_NO_SEPARATOR,
-#if GTK_CHECK_VERSION(3, 0, 0)
+                                           0,
                                            _("_Cancel"), GTK_RESPONSE_CANCEL,
                                            _("_OK"), GTK_RESPONSE_OK,
-#else
-                                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                           GTK_STOCK_OK, GTK_RESPONSE_OK,
-#endif
                                            NULL );
-#if !GTK_CHECK_VERSION(3, 0, 0)
-        gtk_dialog_set_alternative_button_order((GtkDialog*)win,
-                                GTK_RESPONSE_OK, GTK_RESPONSE_CANCEL, -1);
-#endif
         gtk_dialog_set_default_response( (GtkDialog*)win, GTK_RESPONSE_OK );
         entry = gtk_entry_new();
 
@@ -409,13 +395,8 @@ void gtk_run()
         gtk_box_pack_start( (GtkBox*)dlg_vbox,
                              gtk_label_new(_("Enter the command you want to execute:")),
                              FALSE, FALSE, 8 );
-#if GTK_CHECK_VERSION(3, 0, 0)
         hbox = gtk_box_new( GTK_ORIENTATION_HORIZONTAL, 2 );
         img = gtk_image_new_from_icon_name ( "gtk-execute", GTK_ICON_SIZE_DIALOG );
-#else
-        hbox = gtk_hbox_new( FALSE, 2 );
-        img = gtk_image_new_from_stock( GTK_STOCK_EXECUTE, GTK_ICON_SIZE_DIALOG );
-#endif
         gtk_box_pack_start( (GtkBox*)hbox, img,
                              FALSE, FALSE, 4 );
         gtk_box_pack_start( (GtkBox*)hbox, entry, TRUE, TRUE, 4 );

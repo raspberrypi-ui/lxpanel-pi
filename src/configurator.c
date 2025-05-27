@@ -84,9 +84,6 @@ static char* logout_cmd = NULL;
 
 /* GtkColotButton expects a number between 0 and 65535, but p->alpha has range
  * 0 to 255, and (2^(2n) - 1) / (2^n - 1) = 2^n + 1 = 257, with n = 8. */
-#if !GTK_CHECK_VERSION(3, 0, 0)
-static guint16 const alpha_scale_factor = 257;
-#endif
 
 void panel_config_save(Panel *p);
 
@@ -344,23 +341,13 @@ static void set_width_type( GtkWidget *item, LXPanel* panel )
     case WIDTH_PIXEL:
         if ((p->edge == EDGE_TOP) || (p->edge == EDGE_BOTTOM))
         {
-#if GTK_CHECK_VERSION(3, 0, 0)
             gtk_spin_button_set_range( GTK_SPIN_BUTTON(spin), 0, screen_width (NULL) );
             gtk_spin_button_set_value( GTK_SPIN_BUTTON(spin), screen_width (NULL) );
-#else
-            gtk_spin_button_set_range( GTK_SPIN_BUTTON(spin), 0, gdk_screen_width() );
-            gtk_spin_button_set_value( GTK_SPIN_BUTTON(spin), gdk_screen_width() );
-#endif
         }
         else
         {
-#if GTK_CHECK_VERSION(3, 0, 0)
             gtk_spin_button_set_range( GTK_SPIN_BUTTON(spin), 0, screen_height (NULL) );
             gtk_spin_button_set_value( GTK_SPIN_BUTTON(spin), screen_height (NULL) );
-#else
-            gtk_spin_button_set_range( GTK_SPIN_BUTTON(spin), 0, gdk_screen_height() );
-            gtk_spin_button_set_value( GTK_SPIN_BUTTON(spin), gdk_screen_height() );
-#endif
         }
         break;
     case WIDTH_REQUEST:
@@ -454,19 +441,11 @@ background_disable_toggle( GtkWidget *b, Panel* p )
 }
 
 static void
-#if GTK_CHECK_VERSION(3, 0, 0)
 on_font_color_set(GtkColorChooser* clr, LXPanel* panel)
-#else
-on_font_color_set(GtkColorButton* clr, LXPanel* panel)
-#endif
 {
     Panel *p = panel->priv;
 
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_color_chooser_get_rgba( clr, &p->gfontcolor );
-#else
-    gtk_color_button_get_color( clr, &p->gfontcolor );
-#endif
     panel_set_panel_configuration_changed(p);
     p->fontcolor = gcolor2rgb24(&p->gfontcolor);
     UPDATE_GLOBAL_COLOR(p, "fontcolor", p->fontcolor);
@@ -474,23 +453,11 @@ on_font_color_set(GtkColorButton* clr, LXPanel* panel)
 }
 
 static void
-#if GTK_CHECK_VERSION(3, 0, 0)
 on_tint_color_set( GtkColorChooser* clr,  Panel* p )
-#else
-on_tint_color_set( GtkColorButton* clr,  Panel* p )
-#endif
 {
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_color_chooser_get_rgba( clr, &p->gtintcolor );
-#else
-    gtk_color_button_get_color( clr, &p->gtintcolor );
-#endif
     p->tintcolor = gcolor2rgb24(&p->gtintcolor);
-#if GTK_CHECK_VERSION(3, 0, 0)
     p->alpha = (int) (p->gtintcolor.alpha * 256.0);
-#else
-    p->alpha = gtk_color_button_get_alpha( clr ) / alpha_scale_factor;
-#endif
     panel_update_background( p );
     UPDATE_GLOBAL_COLOR(p, "tintcolor", p->tintcolor);
     UPDATE_GLOBAL_INT(p, "alpha", p->alpha);
@@ -823,33 +790,16 @@ static void on_add_plugin( GtkButton* btn, GtkTreeView* _view )
     GHashTableIter iter;
     gpointer key, val;
 
-#if !GTK_CHECK_VERSION(3, 0, 0)
-    LXPanel* p = (LXPanel*) g_object_get_data( G_OBJECT(_view), "panel" );
-#endif
-
     classes = lxpanel_get_all_types();
 
     parent_win = gtk_widget_get_toplevel( GTK_WIDGET(_view) );
     dlg = gtk_dialog_new_with_buttons( _("Add plugin to panel"),
-#if GTK_CHECK_VERSION(3, 0, 0)
                                        GTK_WINDOW(parent_win), 0,
                                        _("_Cancel"),
                                        GTK_RESPONSE_CANCEL,
                                        _("_Add"),
-#else
-                                       GTK_WINDOW(parent_win), 0,
-                                       GTK_STOCK_CANCEL,
-                                       GTK_RESPONSE_CANCEL,
-                                       GTK_STOCK_ADD,
-#endif
                                        GTK_RESPONSE_OK, NULL );
     panel_apply_icon(GTK_WINDOW(dlg));
-
-#if !GTK_CHECK_VERSION(3, 0, 0)
-    /* fix background */
-    if (p->priv->background)
-        gtk_widget_set_style(dlg, p->priv->defstyle);
-#endif
 
     /* gtk_widget_set_sensitive( parent_win, FALSE ); */
     scroll = gtk_scrolled_window_new( NULL, NULL );
@@ -1141,18 +1091,10 @@ void panel_configure( LXPanel* panel, int sel_page )
 {
     Panel *p = panel->priv;
     GtkBuilder* builder;
-#if GTK_CHECK_VERSION(3, 0, 0)
     GtkWidget *w;
-#else
-    GtkWidget *w, *w2, *tint_clr;
-#endif
     FmMimeType *mt;
     GtkComboBox *fm;
-#if GTK_CHECK_VERSION(3, 0, 0)
     GdkDisplay *display;
-#else
-    GdkScreen *screen;
-#endif
     gint monitors;
 
     if( p->pref_dialog )
@@ -1196,13 +1138,8 @@ void panel_configure( LXPanel* panel, int sel_page )
 
     /* monitor */
     monitors = 1;
-#if GTK_CHECK_VERSION(3, 0, 0)
     display = gtk_widget_get_display(GTK_WIDGET(panel));
     if (display) monitors = gdk_display_get_n_monitors(display);
-#else
-    screen = gtk_widget_get_screen(GTK_WIDGET(panel));
-    if(screen) monitors = gdk_screen_get_n_monitors(screen);
-#endif
     g_assert(monitors >= 1);
     w = (GtkWidget*)gtk_builder_get_object( builder, "monitor" );
     if (GTK_IS_SPIN_BUTTON(w))
@@ -1215,10 +1152,8 @@ void panel_configure( LXPanel* panel, int sel_page )
     else if (GTK_IS_COMBO_BOX(w))
     {
         GtkCellRenderer *cell;
-#if GTK_CHECK_VERSION(3, 0, 0)
         GtkListStore *model;
         GtkTreeIter it;
-#endif
         gint i;
         char itext[12];
 
@@ -1228,19 +1163,13 @@ void panel_configure( LXPanel* panel, int sel_page )
         gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(w), cell, "text", 0);
         gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(w), cell,
                                            update_mon_sensitivity, panel, NULL);
-#if GTK_CHECK_VERSION(3, 0, 0)
         model = GTK_LIST_STORE(gtk_combo_box_get_model(GTK_COMBO_BOX(w)));
-#endif
         /* add monitors beyond first one to the model */
         for (i = 1; i < monitors; i++)
         {
             snprintf(itext, sizeof(itext), "%d", i + 1);
-#if GTK_CHECK_VERSION(3, 0, 0)
             gtk_list_store_append(model, &it);
             gtk_list_store_set(model, &it, 0, itext, -1);
-#else
-            gtk_combo_box_append_text(GTK_COMBO_BOX(w), itext);
-#endif
         }
         gtk_combo_box_set_active(GTK_COMBO_BOX(w), p->monitor + 1);
         /* FIXME: set sensitive only if more than 1 monitor available? */
@@ -1282,11 +1211,7 @@ void panel_configure( LXPanel* panel, int sel_page )
     if( p->widthtype == WIDTH_PERCENT)
         upper = 100;
     else if( p->widthtype == WIDTH_PIXEL)
-#if GTK_CHECK_VERSION(3, 0, 0)
         upper = (((p->edge == EDGE_TOP) || (p->edge == EDGE_BOTTOM)) ? screen_width (NULL) : screen_height (NULL));
-#else
-        upper = (((p->edge == EDGE_TOP) || (p->edge == EDGE_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
-#endif
     gtk_spin_button_set_range( GTK_SPIN_BUTTON(w), 0, upper );
     gtk_spin_button_set_value( GTK_SPIN_BUTTON(w), p->width );
     g_signal_connect( w, "value-changed", G_CALLBACK(set_width), panel );
@@ -1349,90 +1274,6 @@ void panel_configure( LXPanel* panel, int sel_page )
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(w), p->height_when_hidden);
     g_signal_connect( w, "value-changed",
                       G_CALLBACK(set_height_when_minimized), panel);
-#if 0
-    /* transparancy */
-    tint_clr = w = (GtkWidget*)gtk_builder_get_object( builder, "tint_clr" );
-#if GTK_CHECK_VERSION(3, 0, 0)
-    p->gtintcolor.alpha = ((double) p->alpha) / 256.0;
-    gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(w), &p->gtintcolor);
-#else
-    gtk_color_button_set_color(GTK_COLOR_BUTTON(w), &p->gtintcolor);
-    gtk_color_button_set_alpha(GTK_COLOR_BUTTON(w), alpha_scale_factor * p->alpha);
-#endif
-    if ( ! p->transparent )
-        gtk_widget_set_sensitive( w, FALSE );
-    g_signal_connect( w, "color-set", G_CALLBACK( on_tint_color_set ), p );
-
-    /* background */
-    {
-        GtkWidget* none, *trans, *img;
-        GtkIconInfo* info;
-        none = (GtkWidget*)gtk_builder_get_object( builder, "bg_none" );
-        trans = (GtkWidget*)gtk_builder_get_object( builder, "bg_transparency" );
-        img = (GtkWidget*)gtk_builder_get_object( builder, "bg_image" );
-
-        g_object_set_data(G_OBJECT(trans), "tint_clr", tint_clr);
-
-        if (p->background)
-            gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(img), TRUE);
-        else if (p->transparent)
-            gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(trans), TRUE);
-        else
-            gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(none), TRUE);
-
-        g_signal_connect(none, "toggled", G_CALLBACK(background_disable_toggle), p);
-        g_signal_connect(trans, "toggled", G_CALLBACK(transparency_toggle), p);
-        g_signal_connect(img, "toggled", G_CALLBACK(background_toggle), p);
-
-        w = (GtkWidget*)gtk_builder_get_object( builder, "img_file" );
-        g_object_set_data(G_OBJECT(img), "img_file", w);
-        if (p->background_file != NULL)
-            gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), p->background_file);
-        else if ((info = gtk_icon_theme_lookup_icon(p->icon_theme, "lxpanel-background", 0, 0)))
-        {
-            gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), gtk_icon_info_get_filename(info));
-#if GTK_CHECK_VERSION(3, 0, 0)
-            g_object_unref (info);
-#else
-            gtk_icon_info_free(info);
-#endif
-        }
-
-        if (!p->background)
-            gtk_widget_set_sensitive( w, FALSE);
-        g_object_set_data( G_OBJECT(w), "bg_image", img );
-        g_signal_connect( w, "file-set", G_CALLBACK (background_changed), p);
-    }
-
-    /* font color */
-    w = (GtkWidget*)gtk_builder_get_object( builder, "font_clr" );
-#if GTK_CHECK_VERSION(3, 0, 0)
-    gtk_color_chooser_set_rgba( GTK_COLOR_CHOOSER(w), &p->gfontcolor );
-#else
-    gtk_color_button_set_color( GTK_COLOR_BUTTON(w), &p->gfontcolor );
-#endif
-    g_signal_connect(w, "color-set", G_CALLBACK( on_font_color_set ), panel);
-
-    w2 = (GtkWidget*)gtk_builder_get_object( builder, "use_font_clr" );
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(w2), p->usefontcolor );
-    g_object_set_data( G_OBJECT(w2), "clr", w );
-    g_signal_connect(w2, "toggled", G_CALLBACK(on_use_font_color_toggled), panel);
-    if( ! p->usefontcolor )
-        gtk_widget_set_sensitive( w, FALSE );
-
-    /* font size */
-    w = (GtkWidget*)gtk_builder_get_object( builder, "font_size" );
-    gtk_spin_button_set_value( GTK_SPIN_BUTTON(w), p->fontsize );
-    g_signal_connect( w, "value-changed",
-                      G_CALLBACK(on_font_size_set), panel);
-
-    w2 = (GtkWidget*)gtk_builder_get_object( builder, "use_font_size" );
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(w2), p->usefontsize );
-    g_object_set_data( G_OBJECT(w2), "clr", w );
-    g_signal_connect(w2, "toggled", G_CALLBACK(on_use_font_size_toggled), panel);
-    if( ! p->usefontsize )
-        gtk_widget_set_sensitive( w, FALSE );
-#endif
     /* plugin list */
     {
         GtkWidget* plugin_list = (GtkWidget*)gtk_builder_get_object( builder, "plugin_list" );
@@ -1627,17 +1468,9 @@ static void on_browse_btn_clicked(GtkButton* btn, GtkEntry* entry)
                                         (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER) ? _("Select a directory") : _("Select a file"),
                                         GTK_WINDOW(dlg),
                                         action,
-#if GTK_CHECK_VERSION(3, 0, 0)
                                         _("_Cancel"), GTK_RESPONSE_CANCEL,
                                         _("_OK"), GTK_RESPONSE_OK,
-#else
-                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                        GTK_STOCK_OK, GTK_RESPONSE_OK,
-#endif
                                         NULL);
-#if !GTK_CHECK_VERSION(3, 0, 0)
-    gtk_dialog_set_alternative_button_order(GTK_DIALOG(fc), GTK_RESPONSE_OK, GTK_RESPONSE_CANCEL, -1);
-#endif
     file = (char*)gtk_entry_get_text(entry);
     if( file && *file )
         gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(fc), file );
@@ -1835,11 +1668,7 @@ GtkWidget *panel_config_int_button_new(const char *name, gint *val,
                                        gint min, gint max)
 {
     GtkWidget *entry = gtk_spin_button_new_with_range(min, max, 1);
-#if GTK_CHECK_VERSION(3, 0, 0)
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
-#else
-    GtkWidget *hbox = gtk_hbox_new(FALSE, 2);
-#endif
 
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(entry), *val);
     g_signal_connect(entry, "value-changed", G_CALLBACK(on_spin_changed), val);

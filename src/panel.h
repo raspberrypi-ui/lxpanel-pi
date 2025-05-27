@@ -34,18 +34,6 @@
 
 G_BEGIN_DECLS
 
-/**
- * LXPANEL_CHECK_VERSION
- *
- * A simple macro for plugins to check features.
- *
- * Since: 0.8.0
- */
-#define LXPANEL_CHECK_VERSION(_a,_b,_c) \
-    (0 > _a || \
-    (0 == _a && 10 > _b) || \
-    (0 == _a && 10 == _b && 1 >= _c))
-
 
 #define LX_TYPE_PANEL                  (lxpanel_get_type())
 #define LXPANEL(obj)                   (G_TYPE_CHECK_INSTANCE_CAST((obj), \
@@ -123,15 +111,9 @@ extern void lxpanel_draw_label_text(LXPanel * p, GtkWidget * label, const char *
  * Changes @label to contain @text with appropriate attributes using the
  * panel @p settings.
  */
-#if GTK_CHECK_VERSION(3, 0, 0)
 extern void lxpanel_draw_label_text_with_color(LXPanel * p, GtkWidget * label, const char * text,
                                     gboolean bold, float custom_size_factor,
                                     GdkRGBA *color);
-#else
-extern void lxpanel_draw_label_text_with_color(LXPanel * p, GtkWidget * label, const char * text,
-                                    gboolean bold, float custom_size_factor,
-                                    GdkColor *color);
-#endif
 
 /**
  * lxpanel_config_save
@@ -148,9 +130,6 @@ extern gint panel_get_safe_icon_size(LXPanel *panel);
 extern gint panel_get_height(LXPanel *panel);
 extern Window panel_get_xwindow(LXPanel *panel);
 extern gint panel_get_monitor(LXPanel *panel);
-#if !GTK_CHECK_VERSION(3, 0, 0)
-extern GtkStyle *panel_get_defstyle(LXPanel *panel);
-#endif
 extern GtkIconTheme *panel_get_icon_theme(LXPanel *panel);
 extern gboolean panel_is_at_bottom(LXPanel *panel);
 extern gboolean panel_is_dynamic(LXPanel *panel);

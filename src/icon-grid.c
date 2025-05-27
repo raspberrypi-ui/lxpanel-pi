@@ -25,7 +25,6 @@
 
 #include "icon-grid.h"
 #include "panel.h" /* for panel_get_height() */
-#include "gtk-compat.h"
 
 /* Properties */
 enum {
@@ -208,11 +207,7 @@ static void panel_icon_grid_size_allocate(GtkWidget *widget,
         if (gtk_widget_get_visible(child))
         {
             /* Do necessary operations on the child. */
-#if GTK_CHECK_VERSION(3, 0, 0)
             gtk_widget_get_preferred_size (child, NULL, &req);
-#else
-            gtk_widget_get_child_requisition(child, &req);
-#endif
             icon_grid_element_check_requisition(ig, &req);
             child_allocation.width = MIN(req.width, child_width);
             child_allocation.height = MIN(req.height, child_height);
@@ -308,11 +303,7 @@ static void panel_icon_grid_calculate_size(PanelIconGrid *ig,
         for (ige = ig->children; ige != NULL; ige = ige->next)
             if (gtk_widget_get_visible(ige->data))
             {
-#if GTK_CHECK_VERSION(3, 0, 0)
                 gtk_widget_get_preferred_size(ige->data, NULL, &child_requisition);
-#else
-                gtk_widget_size_request(ige->data, &child_requisition);
-#endif
                 icon_grid_element_check_requisition(ig, &child_requisition);
                 if (row == 0)
                     ig->columns++;
@@ -338,14 +329,12 @@ static void panel_icon_grid_calculate_size(PanelIconGrid *ig,
             ig->rows = visible_children; */
         if (ig->columns > 0)
             requisition->height = (ig->child_height + ig->spacing) * ig->rows - ig->spacing + 2 * border;
-#if GTK_CHECK_VERSION(3, 0, 0)
         /* The line below fixes a problem under GTK+3 whereby an icon grid which is supposed to have a constrained width,
          * such as the taskbar, just keeps growing as items are added. I am not 100% sure why this fix works - I think it is
          * because otherwise the icon grid's width request just gets bigger as items are added, and the bar allocates the requested
          * space; by resetting the requisition to zero, the widget is only ever given any remaining space and so does not grow
          * infinitely. This may have side effects which I have not yet discovered... */
         if (ig->constrain_width) requisition->width = 0;
-#endif
     }
     else
     {
@@ -359,11 +348,7 @@ static void panel_icon_grid_calculate_size(PanelIconGrid *ig,
         for (ige = ig->children; ige != NULL; ige = ige->next)
             if (gtk_widget_get_visible(ige->data))
             {
-#if GTK_CHECK_VERSION(3, 0, 0)
                 gtk_widget_get_preferred_size(ige->data, NULL, &child_requisition);
-#else
-                gtk_widget_size_request(ige->data, &child_requisition);
-#endif
                 icon_grid_element_check_requisition(ig, &child_requisition);
                 if (w > 0)
                 {
@@ -394,7 +379,6 @@ static void panel_icon_grid_size_request(GtkWidget *widget,
     panel_icon_grid_calculate_size(ig, requisition);
 }
 
-#if GTK_CHECK_VERSION(3, 0, 0)
 static void panel_icon_grid_get_preferred_width(GtkWidget *widget,
                                                 gint *minimal_width,
                                                 gint *natural_width)
@@ -433,7 +417,6 @@ static void panel_icon_grid_get_preferred_height(GtkWidget *widget,
     if (natural_height)
         *natural_height = requisition.height;
 }
-#endif
 
 /* Add an icon grid element and establish its initial visibility. */
 static void panel_icon_grid_add(GtkContainer *container, GtkWidget *widget)
@@ -912,20 +895,13 @@ static void panel_icon_grid_realize(GtkWidget *widget)
 {
     PanelIconGrid *ig = PANEL_ICON_GRID(widget);
     GdkWindow *window;
-#if !GTK_CHECK_VERSION(3, 0, 0)
-    GtkStyle *style;
-#endif
     GtkAllocation allocation;
     GdkWindowAttr attributes;
     guint border = gtk_container_get_border_width(GTK_CONTAINER(widget));
     gint attributes_mask;
     gboolean visible_window;
 
-#if GTK_CHECK_VERSION(2, 20, 0)
     gtk_widget_set_realized(widget, TRUE);
-#else
-    GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
-#endif
 
     gtk_widget_get_allocation(widget, &allocation);
     attributes.x = allocation.x + border;
@@ -945,16 +921,9 @@ static void panel_icon_grid_realize(GtkWidget *widget)
     if (visible_window)
     {
         attributes.visual = gtk_widget_get_visual(widget);
-#if !GTK_CHECK_VERSION(3, 0, 0)
-        attributes.colormap = gtk_widget_get_colormap(widget);
-#endif
         attributes.wclass = GDK_INPUT_OUTPUT;
 
-#if GTK_CHECK_VERSION(3, 0, 0)
         attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL;
-#else
-        attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
-#endif
 
         window = gdk_window_new(gtk_widget_get_parent_window(widget),
                                 &attributes, attributes_mask);
@@ -973,14 +942,6 @@ static void panel_icon_grid_realize(GtkWidget *widget)
         ig->event_window = gdk_window_new(window, &attributes, attributes_mask);
         gdk_window_set_user_data(ig->event_window, widget);
     }
-
-#if !GTK_CHECK_VERSION(3, 0, 0)
-    style = gtk_style_attach(gtk_widget_get_style(widget), window);
-    gtk_widget_set_style(widget, style);
-
-    if (visible_window)
-        gtk_style_set_background(style, window, GTK_STATE_NORMAL);
-#endif
 }
 
 static void panel_icon_grid_unrealize(GtkWidget *widget)
@@ -1015,11 +976,7 @@ static void panel_icon_grid_unmap(GtkWidget *widget)
     GTK_WIDGET_CLASS(panel_icon_grid_parent_class)->unmap(widget);
 }
 
-#if GTK_CHECK_VERSION(3, 0, 0)
 static gboolean panel_icon_grid_draw(GtkWidget *widget, cairo_t *cr)
-#else
-static gboolean panel_icon_grid_expose(GtkWidget *widget, GdkEventExpose *event)
-#endif
 {
     if (gtk_widget_is_drawable(widget))
     {
@@ -1027,32 +984,20 @@ static gboolean panel_icon_grid_expose(GtkWidget *widget, GdkEventExpose *event)
 
         if (gtk_widget_get_has_window(widget) &&
             !gtk_widget_get_app_paintable(widget))
-#if GTK_CHECK_VERSION(3, 0, 0)
             gtk_render_background(gtk_widget_get_style_context(widget), cr, 0, 0,
                                   gtk_widget_get_allocated_width(widget),
                                   gtk_widget_get_allocated_height(widget));
-#else
-            gtk_paint_flat_box(gtk_widget_get_style(widget),
-                               gtk_widget_get_window(widget),
-                               gtk_widget_get_state(widget), GTK_SHADOW_NONE,
-                               &event->area, widget, "panelicongrid",
-                               0, 0, -1, -1);
-#endif
 
         ig = PANEL_ICON_GRID(widget);
         if (ig->dest_item && gtk_widget_get_has_window(widget))
         {
             GtkAllocation allocation;
             GdkRectangle rect;
-#if GTK_CHECK_VERSION(3, 0, 0)
             GtkStyleContext *context;
-#endif
 
             gtk_widget_get_allocation(ig->dest_item, &allocation);
-#if GTK_CHECK_VERSION(3, 0, 0)
             cairo_save(cr);
             //gtk_cairo_transform_to_window(cr, widget, gtk_widget_get_window(widget));
-#endif
             switch(ig->dest_pos)
             {
             case PANEL_ICON_GRID_DROP_LEFT_AFTER:
@@ -1088,26 +1033,13 @@ static gboolean panel_icon_grid_expose(GtkWidget *widget, GdkEventExpose *event)
                 rect.y = allocation.y - 1;
                 rect.height = allocation.height + 2;
             }
-#if GTK_CHECK_VERSION(3, 0, 0)
             context = gtk_widget_get_style_context(widget);
             gtk_style_context_set_state(context, gtk_widget_get_state_flags(widget));
             gtk_render_focus(context, cr, rect.x, rect.y, rect.width, rect.height);
             cairo_restore(cr);
-#else
-            gtk_paint_focus(gtk_widget_get_style(widget),
-                            gtk_widget_get_window(widget),
-                            gtk_widget_get_state(widget),
-                            NULL, widget,
-                            "panelicongrid-drop-indicator",
-                            rect.x, rect.y, rect.width, rect.height);
-#endif
         }
 
-#if GTK_CHECK_VERSION(3, 0, 0)
         GTK_WIDGET_CLASS(panel_icon_grid_parent_class)->draw(widget, cr);
-#else
-        GTK_WIDGET_CLASS(panel_icon_grid_parent_class)->expose_event(widget, event);
-#endif
     }
     return FALSE;
 }
@@ -1181,22 +1113,14 @@ static void panel_icon_grid_class_init(PanelIconGridClass *klass)
     object_class->set_property = panel_icon_grid_set_property;
     object_class->get_property = panel_icon_grid_get_property;
 
-#if GTK_CHECK_VERSION(3, 0, 0)
     widget_class->get_preferred_width = panel_icon_grid_get_preferred_width;
     widget_class->get_preferred_height = panel_icon_grid_get_preferred_height;
-#else
-    widget_class->size_request = panel_icon_grid_size_request;
-#endif
     widget_class->size_allocate = panel_icon_grid_size_allocate;
     widget_class->realize = panel_icon_grid_realize;
     widget_class->unrealize = panel_icon_grid_unrealize;
     widget_class->map = panel_icon_grid_map;
     widget_class->unmap = panel_icon_grid_unmap;
-#if GTK_CHECK_VERSION(3, 0, 0)
     widget_class->draw = panel_icon_grid_draw;
-#else
-    widget_class->expose_event = panel_icon_grid_expose;
-#endif
 
     container_class->add = panel_icon_grid_add;
     container_class->remove = panel_icon_grid_remove;

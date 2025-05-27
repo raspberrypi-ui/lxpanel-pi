@@ -94,13 +94,8 @@ struct _Panel {
     int alpha;
     guint32 tintcolor;
     guint32 fontcolor;
-#if GTK_CHECK_VERSION(3, 0, 0)
     GdkRGBA gtintcolor;
     GdkRGBA gfontcolor;
-#else
-    GdkColor gtintcolor;
-    GdkColor gfontcolor;
-#endif
 
     int ax, ay, aw, ah;  /* prefferd allocation of a panel */
     int cx, cy, cw, ch;  /* current allocation (as reported by configure event) allocation */

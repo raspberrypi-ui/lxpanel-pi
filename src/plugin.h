@@ -36,9 +36,7 @@ G_BEGIN_DECLS
 
 #define FM_MODULE_lxpanel_gtk_VERSION 1 /* version of this API */
 
-#if GTK_CHECK_VERSION(3, 0, 0)
 #define MENU_ICON_SPACE 6
-#endif
 
 /**
  * LXPanelPluginInit:

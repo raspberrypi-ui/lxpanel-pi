@@ -48,7 +48,6 @@
 #include "plugin.h"
 #include "misc.h"
 #include "icon.xpm"
-#include "gtk-compat.h"
 
 #include "task-button.h"
 
@@ -131,14 +130,10 @@ static gint get_window_monitor(Window win)
     g_assert(display);
     gwin = gdk_x11_window_foreign_new_for_display(display,win);
     g_assert(gwin);
-#if GTK_CHECK_VERSION(3, 0, 0)
     m = -1;
     GdkMonitor *mon = gdk_display_get_monitor_at_window (gdk_window_get_display (gwin), gwin);
     for (int i = 0; i < gdk_display_get_n_monitors (gdk_window_get_display (gwin)); i++)
         if (gdk_display_get_monitor (gdk_window_get_display (gwin), i) == mon) m = i;
-#else
-    m = gdk_screen_get_monitor_at_window(gdk_window_get_screen(gwin),gwin);
-#endif
     g_object_unref(gwin);
     return m;
 }
@@ -228,11 +223,7 @@ static TaskDetails *task_details_for_window(TaskButton *button, Window win)
      *
      * Do not change event mask to gtk windows spawned by this gtk client
      * this breaks gtk internals */
-#if GTK_CHECK_VERSION(2, 24, 0)
     if (!gdk_x11_window_lookup_for_display(display, win))
-#else
-    if (!gdk_window_lookup(win))
-#endif
         XSelectInput(GDK_DISPLAY_XDISPLAY(display), win,
                      PropertyChangeMask | StructureNotifyMask);
 
@@ -268,18 +259,6 @@ static TaskDetails *task_details_lookup(TaskButton *task, Window win)
             return l->data;
     return NULL;
 }
-
-/* Position-calculation callback for grouped-task and window-management popup menu. */
-#if !GTK_CHECK_VERSION(3, 0, 0)
-static void taskbar_popup_set_position(GtkMenu * menu, gint * px, gint * py, gboolean * push_in, gpointer data)
-{
-    TaskButton * tb = (TaskButton *) data;
-
-    /* Determine the coordinates. */
-    lxpanel_plugin_popup_set_position_helper(tb->panel, data, GTK_WIDGET(menu), px, py);
-    *push_in = TRUE;
-}
-#endif
 
 static inline TaskButton *get_menu_task_button(GtkWidget *taskbar)
 {
@@ -481,9 +460,7 @@ static GtkWidget *get_task_button_menu(TaskButton *tb, TaskDetails *task)
  * We also switch the active desktop and viewport if needed. */
 static void task_raise_window(TaskButton *tb, TaskDetails *tk, guint32 time)
 {
-#if GTK_CHECK_VERSION(2, 24, 0)
     GdkDisplay *display = gtk_widget_get_display(GTK_WIDGET(tb));
-#endif
     Screen *xscreen = GDK_SCREEN_XSCREEN(gtk_widget_get_screen(GTK_WIDGET(tb)));
     Display *xdisplay = DisplayOfScreen(xscreen);
 
@@ -497,11 +474,7 @@ static void task_raise_window(TaskButton *tb, TaskDetails *tk, guint32 time)
         Xclimsgx(xscreen, tk->win, a_NET_ACTIVE_WINDOW, 2, time, 0, 0, 0);
     else
     {
-#if GTK_CHECK_VERSION(2, 24, 0)
         GdkWindow * gdkwindow = gdk_x11_window_lookup_for_display(display, tk->win);
-#else
-        GdkWindow * gdkwindow = gdk_xid_table_lookup(tk->win);
-#endif
         if (gdkwindow != NULL)
             gdk_window_show(gdkwindow);
         else
@@ -630,30 +603,18 @@ static void taskbar_close_all_windows(GtkWidget * widget, TaskButton *tb)
 static void assemble_gui(TaskButton *self)
 {
     /* Create a box to contain the application icon and window title. */
-#if GTK_CHECK_VERSION(3, 0, 0)
     GtkWidget * container = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-#else
-    GtkWidget * container = gtk_hbox_new(FALSE, 1);
-#endif
     gtk_container_set_border_width(GTK_CONTAINER(container), 0);
 
     /* Add the image to contain the application icon to the box. */
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_widget_set_margin_start (self->image, 0);
     gtk_widget_set_margin_end (self->image, 0);
     gtk_widget_set_margin_top (self->image, 0);
     gtk_widget_set_margin_bottom (self->image, 0);
-#else
-    gtk_misc_set_padding(GTK_MISC(self->image), 0, 0);
-#endif
     gtk_box_pack_start(GTK_BOX(container), self->image, FALSE, FALSE, 0);
 
     /* Add the label to contain the window title to the box. */
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_label_set_xalign (GTK_LABEL(self->label), 0.0);
-#else
-    gtk_misc_set_alignment(GTK_MISC(self->label), 0.0, 0.5);
-#endif
     gtk_label_set_ellipsize(GTK_LABEL(self->label), PANGO_ELLIPSIZE_END);
     gtk_box_pack_start(GTK_BOX(container), self->label, TRUE, TRUE, 0);
 
@@ -688,57 +649,6 @@ static void map_xwindow_animation(GtkWidget *widget, Window win, GtkAllocation *
 
 /* Get a pixbuf from a pixmap.
  * Originally from libwnck, Copyright (C) 2001 Havoc Pennington. */
-#if !GTK_CHECK_VERSION(3, 0, 0)
-static GdkPixbuf * _wnck_gdk_pixbuf_get_from_pixmap(GdkScreen *screen, Pixmap xpixmap, Window win, int width, int height)
-{
-    /* Get the drawable. */
-#if GTK_CHECK_VERSION(2, 24, 0)
-    GdkDrawable * drawable = gdk_x11_window_lookup_for_display(gdk_display_get_default(), xpixmap);
-#else
-    GdkDrawable * drawable = gdk_xid_table_lookup(xpixmap);
-#endif
-    if (drawable != NULL)
-        g_object_ref(G_OBJECT(drawable));
-    else
-        drawable = gdk_pixmap_foreign_new(xpixmap);
-
-    GdkColormap * colormap = NULL;
-    GdkPixbuf * retval = NULL;
-    if (drawable != NULL)
-    {
-        /* Get the colormap.
-         * If the drawable has no colormap, use no colormap or the system colormap as recommended in the documentation of gdk_drawable_get_colormap. */
-        colormap = gdk_drawable_get_colormap(drawable);
-        gint depth = gdk_drawable_get_depth(drawable);
-        if (colormap != NULL)
-            g_object_ref(G_OBJECT(colormap));
-        else if (depth == 1)
-            colormap = NULL;
-        else
-        {
-            colormap = gdk_screen_get_system_colormap(screen);
-            g_object_ref(G_OBJECT(colormap));
-        }
-
-        /* Be sure we aren't going to fail due to visual mismatch. */
-        if ((colormap != NULL) && (gdk_visual_get_depth(gdk_colormap_get_visual(colormap)) != depth))
-        {
-            g_object_unref(G_OBJECT(colormap));
-            colormap = NULL;
-        }
-
-        /* Do the major work. */
-        retval = gdk_pixbuf_get_from_drawable(NULL, drawable, colormap, 0, 0, 0, 0, width, height);
-    }
-
-    /* Clean up and return. */
-    if (colormap != NULL)
-        g_object_unref(G_OBJECT(colormap));
-    if (drawable != NULL)
-        g_object_unref(G_OBJECT(drawable));
-    return retval;
-}
-#else
 static GdkPixbuf * _wnck_gdk_pixbuf_get_from_pixmap(GdkScreen *screen, Pixmap xpixmap, Window win, int width, int height)
 {
   cairo_surface_t *surface;
@@ -748,10 +658,6 @@ static GdkPixbuf * _wnck_gdk_pixbuf_get_from_pixmap(GdkScreen *screen, Pixmap xp
 
   surface = NULL;
   xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
-
-#if !GTK_CHECK_VERSION(3, 0, 0)
-  gdk_error_trap_push();
-#endif
 
   if (!XGetWindowAttributes (xdisplay, win, &attrs))
     goto TRAP_POP;
@@ -776,17 +682,10 @@ static GdkPixbuf * _wnck_gdk_pixbuf_get_from_pixmap(GdkScreen *screen, Pixmap xp
   cairo_surface_destroy (surface);
 
 TRAP_POP:
-#if GTK_CHECK_VERSION(3, 0, 0)
   gdk_display_flush(gdk_display_get_default());
-#else
-  gdk_flush();
-  if (gdk_error_trap_pop())
-    g_warning("task button : X error");
-#endif
 
   return pixbuf;
 }
-#endif
 
 /* Apply a mask to a pixbuf.
  * Originally from libwnck, Copyright (C) 2001 Havoc Pennington. */
@@ -1293,12 +1192,7 @@ static gboolean task_button_button_press_event(GtkWidget *widget, GdkEventButton
             gtk_menu_detach(GTK_MENU(menu));
         /* attach menu to the widget and show it */
         gtk_menu_attach_to_widget(GTK_MENU(menu), widget, NULL);
-#if GTK_CHECK_VERSION(3, 0, 0)
         gtk_menu_popup_at_widget (GTK_MENU(menu), widget, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST, (GdkEvent *) event);
-#else
-        gtk_menu_popup(GTK_MENU(menu), NULL, NULL, taskbar_popup_set_position,
-                       tb, event->button, event->time);
-#endif
     }
     return TRUE;
 }
@@ -1331,9 +1225,7 @@ static gboolean task_button_button_release_event(GtkWidget *widget, GdkEventButt
                 gtk_menu_detach(tb->menu_list);
             }
             tb->menu_list = GTK_MENU(gtk_menu_new());
-#if GTK_CHECK_VERSION(3, 0, 0)
             gtk_menu_set_reserve_toggle_size (GTK_MENU (tb->menu_list), FALSE);
-#endif
             g_object_add_weak_pointer(G_OBJECT(tb->menu_list), (void **)&tb->menu_list);
             g_signal_connect(G_OBJECT(tb->menu_list), "selection-done",
                              G_CALLBACK(on_menu_list_selection_done), tb);
@@ -1346,7 +1238,6 @@ static gboolean task_button_button_release_event(GtkWidget *widget, GdkEventButt
                     /* The menu item has the name, or the iconified name, and
                      * the icon of the application window. */
                     name = task->iconified ? g_strdup_printf("[%s]", task->name) : NULL;
-#if GTK_CHECK_VERSION(3, 0, 0)
                     task->menu_item = lxpanel_plugin_new_menu_item (tb->panel, name ? name : task->name, 0, NULL);
                     g_free(name);
                     if (task->icon)
@@ -1354,15 +1245,6 @@ static gboolean task_button_button_release_event(GtkWidget *widget, GdkEventButt
                         GtkWidget *im = gtk_image_new_from_pixbuf(task->icon);
                         lxpanel_plugin_update_menu_icon (task->menu_item, im);
                     }
-#else
-                    task->menu_item = gtk_image_menu_item_new_with_label(name ? name : task->name);
-                    g_free(name);
-                    if (task->icon)
-                    {
-                        GtkWidget *im = gtk_image_new_from_pixbuf(task->icon);
-                        gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(task->menu_item), im);
-                    }
-#endif
                     g_signal_connect(task->menu_item, "button-press-event",
                                      G_CALLBACK(taskbar_popup_activate_event), tb);
                     g_signal_connect(task->menu_item, "select",
@@ -1379,12 +1261,7 @@ static gboolean task_button_button_release_event(GtkWidget *widget, GdkEventButt
              * positioned with respect to the button. */
             gtk_widget_show_all(GTK_WIDGET(tb->menu_list));
             gtk_menu_attach_to_widget(tb->menu_list, widget, NULL);
-#if GTK_CHECK_VERSION(3, 0, 0)
             gtk_menu_popup_at_widget (tb->menu_list, widget, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST, (GdkEvent *) event);
-#else
-            gtk_menu_popup(tb->menu_list, NULL, NULL, taskbar_popup_set_position,
-                           tb, event->button, event->time);
-#endif
         }
     }
     else
@@ -1395,11 +1272,7 @@ static gboolean task_button_button_release_event(GtkWidget *widget, GdkEventButt
 
     /* As a matter of policy, avoid showing selected or prelight states on flat buttons. */
     if (tb->flags.flat_button)
-#if GTK_CHECK_VERSION(3, 0, 0)
         gtk_widget_set_state_flags(widget, GTK_STATE_FLAG_NORMAL, TRUE);
-#else
-        gtk_widget_set_state(widget, GTK_STATE_NORMAL);
-#endif
     return TRUE;
 }
 
@@ -1508,14 +1381,8 @@ static void task_button_init(TaskButton *self)
     gtk_container_set_border_width(GTK_CONTAINER(self), 0);
     gtk_widget_set_can_focus(GTK_WIDGET(self), FALSE);
     gtk_widget_set_can_default(GTK_WIDGET(self), FALSE);
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_widget_set_state_flags(GTK_WIDGET(self), GTK_STATE_FLAG_NORMAL, TRUE);
-#else
-    gtk_widget_set_state(GTK_WIDGET(self), GTK_STATE_NORMAL);
-#endif
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_widget_add_events(GTK_WIDGET(self), GDK_SCROLL_MASK);
-#endif
 }
 
 
@@ -1863,13 +1730,8 @@ void task_button_set_flash_state(TaskButton *button, gboolean state)
             /* don't ever touch selected menu item, it makes odd effects */
             && button->menu_target != details->win)
             /* if submenu exists and mapped then set state too */
-#if GTK_CHECK_VERSION(3, 0, 0)
             gtk_widget_set_state_flags(details->menu_item,
                                  m_state ? GTK_STATE_FLAG_SELECTED : GTK_STATE_FLAG_NORMAL, TRUE);
-#else
-            gtk_widget_set_state(details->menu_item,
-                                 m_state ? GTK_STATE_SELECTED : GTK_STATE_NORMAL);
-#endif
     }
     /* Set state on the button and redraw. */
     if (button->flags.flat_button)
@@ -1882,23 +1744,13 @@ void task_button_set_flash_state(TaskButton *button, gboolean state)
         }
     }
     else if (has_flash)
-#if GTK_CHECK_VERSION(3, 0, 0)
         gtk_widget_set_state_flags(GTK_WIDGET(button),
                              state ? GTK_STATE_FLAG_SELECTED : GTK_STATE_FLAG_NORMAL, TRUE);
-#else
-        gtk_widget_set_state(GTK_WIDGET(button),
-                             state ? GTK_STATE_SELECTED : GTK_STATE_NORMAL);
-#endif
     else if (!button->entered_state && button->has_flash)
         /* if flash state just disappeared and button isn't hovered then
            update the state, otherwise it will be updated on mouse leave */
-#if GTK_CHECK_VERSION(3, 0, 0)
         gtk_widget_set_state_flags(GTK_WIDGET(button),
                              button->last_focused == NULL ? GTK_STATE_FLAG_NORMAL : GTK_STATE_FLAG_ACTIVE, TRUE);
-#else
-        gtk_widget_set_state(GTK_WIDGET(button),
-                             button->last_focused == NULL ? GTK_STATE_NORMAL : GTK_STATE_ACTIVE);
-#endif
     button->has_flash = has_flash;
 }
 

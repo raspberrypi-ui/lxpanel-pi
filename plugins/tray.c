@@ -40,9 +40,7 @@
 #include "misc.h"
 #include "icon-grid.h"
 
-#if GTK_CHECK_VERSION(3, 0, 0)
 #include <gtk/gtkx.h>
-#endif
 
 /* Standards reference:  http://standards.freedesktop.org/systemtray-spec/ */
 
@@ -119,10 +117,8 @@ static gboolean do_redraw (gpointer data)
 
 static void redraw (TrayPlugin *tr)
 {
-#if GTK_CHECK_VERSION (3, 0, 0)
     tr->redraw_called = 0;
     g_idle_add (do_redraw, tr);
-#endif
 }
 
 static void on_size_alloc (GtkWidget *wid, GtkAllocation *alloc, gpointer data)
@@ -258,9 +254,6 @@ static void balloon_message_display(TrayPlugin * tr, BalloonMessage * msg)
     tr->balloon_message_popup = gtk_window_new(GTK_WINDOW_POPUP);
     GtkWidget * balloon_text = gtk_label_new(msg->string);
     gtk_label_set_line_wrap(GTK_LABEL(balloon_text), TRUE);
-#if !GTK_CHECK_VERSION(3, 0, 0)
-    gtk_misc_set_alignment(GTK_MISC(balloon_text), 0.5, 0.5);
-#endif
     gtk_container_add(GTK_CONTAINER(tr->balloon_message_popup), balloon_text);
     gtk_widget_show(balloon_text);
     gtk_container_set_border_width(GTK_CONTAINER(tr->balloon_message_popup), 4);
@@ -610,11 +603,7 @@ static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
     GdkDisplay * display = gdk_screen_get_display(screen);
 
     /* Create the selection atom.  This has the screen number in it, so cannot be done ahead of time. */
-#if GTK_CHECK_VERSION(3, 0, 0)
     char * selection_atom_name = g_strdup_printf("_NET_SYSTEM_TRAY_S0");
-#else
-    char * selection_atom_name = g_strdup_printf("_NET_SYSTEM_TRAY_S%d", gdk_screen_get_number(screen));
-#endif
     Atom selection_atom = gdk_x11_get_xatom_by_name_for_display(display, selection_atom_name);
     GdkAtom gdk_selection_atom = gdk_atom_intern(selection_atom_name, FALSE);
     g_free(selection_atom_name);
@@ -690,11 +679,9 @@ static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
     gtk_widget_set_name(p, "tray");
     panel_icon_grid_set_aspect_width(PANEL_ICON_GRID(p), TRUE);
 
-#if GTK_CHECK_VERSION(3, 0, 0)
     tr->redraw_called = 0;
     g_signal_connect (p, "size-allocate", G_CALLBACK (on_size_alloc), tr);
     g_idle_add (init_redraw, tr);
-#endif
 
     return p;
 }

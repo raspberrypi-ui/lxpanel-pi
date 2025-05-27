@@ -275,7 +275,6 @@ static gboolean panel_space_files_dropped(FmDndDest *dd, int x, int y, GdkDragAc
     return TRUE;
 }
 
-#if GTK_CHECK_VERSION(3, 0, 0)
 static void panel_space_get_preferred_size(GtkWidget *widget,
                                            gint *minimal_width,
                                            gint *natural_width)
@@ -287,15 +286,6 @@ static void panel_space_get_preferred_size(GtkWidget *widget,
     if (natural_width)
         *natural_width = p->size;
 }
-#else
-static void panel_space_size_request(GtkWidget *widget,
-                                     GtkRequisition *requisition)
-{
-    PanelSpace *p = PANEL_SPACE(widget);
-
-    requisition->width = requisition->height = p->size;
-}
-#endif
 
 G_DEFINE_TYPE(PanelSpace, panel_space, GTK_TYPE_EVENT_BOX)
 
@@ -319,12 +309,8 @@ static void panel_space_class_init(PanelSpaceClass *klass)
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-#if GTK_CHECK_VERSION(3, 0, 0)
     widget_class->get_preferred_width = panel_space_get_preferred_size;
     widget_class->get_preferred_height = panel_space_get_preferred_size;
-#else
-    widget_class->size_request = panel_space_size_request;
-#endif
     widget_class->drag_drop = panel_space_drag_drop;
     widget_class->drag_data_received = panel_space_drag_data_received;
     widget_class->drag_motion = panel_space_drag_motion;
