@@ -1430,11 +1430,6 @@ static void panel_popupmenu_about( GtkMenuItem* item, Panel* panel )
          gtk_about_dialog_set_logo( GTK_ABOUT_DIALOG(about),
                                     gtk_icon_theme_load_icon(panel->icon_theme, "start-here", 48, 0, NULL));
     }
-    else
-    {
-        gtk_about_dialog_set_logo(  GTK_ABOUT_DIALOG(about),
-                                    gdk_pixbuf_new_from_file(PACKAGE_DATA_DIR "/images/my-computer.png", NULL));
-    }
 
     gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about), _("Copyright (C) 2008-2021"));
     gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about), _( "Desktop panel for LXDE project"));
@@ -1458,10 +1453,7 @@ void panel_apply_icon( GtkWindow *w )
     {
         window_icon = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(), "start-here", 24, 0, NULL);
     }
-    else
-    {
-        window_icon = gdk_pixbuf_new_from_file(PACKAGE_DATA_DIR "/images/my-computer.png", NULL);
-    }
+    else return;
     gtk_window_set_icon(w, window_icon);
 }
 

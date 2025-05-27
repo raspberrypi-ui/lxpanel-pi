@@ -740,9 +740,6 @@ int main(int argc, char *argv[], char *env[])
 
     _ensure_user_config_dirs();
 
-    /* Add our own icons to the search path of icon theme */
-    gtk_icon_theme_append_search_path( gtk_icon_theme_get_default(), PACKAGE_DATA_DIR "/images" );
-
     fbev = fb_ev_new();
 
     is_restarting = FALSE;
