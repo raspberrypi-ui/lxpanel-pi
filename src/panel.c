@@ -61,7 +61,7 @@
 #include "lxpanelctl.h"
 #include "dbg.h"
 
-gchar *cprofile = "LXDE-pi";
+gchar *cprofile = "";
 
 GSList* all_panels = NULL;  /* a single-linked list storing all panels */
 
