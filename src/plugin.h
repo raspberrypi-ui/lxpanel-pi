@@ -410,7 +410,7 @@ extern void lxpanel_notify_init (LXPanel *panel);
 extern int lxpanel_notify (LXPanel *panel, char *message);
 extern void lxpanel_notify_clear (int seq);
 
-#define BORDER_SIZE 2
+#define BORDER_SIZE 1
 
 typedef struct {
     GtkWidget *da;                          /* Drawing area */
