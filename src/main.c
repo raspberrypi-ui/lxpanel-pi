@@ -651,7 +651,13 @@ static gboolean start_all_panels( )
     panel_dir = _old_system_config_file_name("panels");
     _start_panels_from_dir(panel_dir, 0);
     g_free(panel_dir);
-    return all_panels != NULL;
+    if (all_panels != NULL) return TRUE;
+
+    /* use the default panel */
+    LXPanel* panel = panel_new ("/etc/xdg/lxpanel-pi/default", "default");
+    all_panels = g_slist_prepend (all_panels, panel);
+    first_panel = panel;
+    return TRUE;
 }
 
 static void _ensure_user_config_dirs(void)

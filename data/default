@@ -1,0 +1,12 @@
+Global {
+  edge=top
+  align=left
+  margin=0
+  widthtype=percent
+  width=100
+  height=36
+  autohide=0
+  background=0
+  iconsize=36
+  monitor=0
+}
