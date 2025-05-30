@@ -1160,8 +1160,9 @@ panel_popupmenu_configure(GtkWidget *widget, gpointer user_data)
 static gint
 panel_popupmenu_appearance(GtkWidget *widget, gpointer user_data)
 {
-    char *args[5] = { "/usr/bin/env", "SUDO_ASKPASS=/usr/lib/pipanel/pwdpip.sh", "/usr/bin/pipanel", "-3", NULL };
-    g_spawn_async (PACKAGE_DATA_DIR, args, NULL, 0, NULL, NULL, NULL, NULL);
+    char *args[3] = { "rpcc", "taskbar", NULL };
+    g_spawn_async (NULL, args, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+
     return TRUE;
 }
 
