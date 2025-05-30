@@ -1,4 +1,0 @@
-usr/share/lxpanel
-usr/share/locale
-
-debian/local/source_lxpanel.py	usr/share/apport/package-hooks
