@@ -604,11 +604,11 @@ void lxpanel_plugin_set_menu_icon (LXPanel *p, GtkWidget *image, const char *ico
 
     if (icon)
         pixbuf = gtk_icon_theme_load_icon (panel_get_icon_theme (p), icon,
-            panel_get_safe_icon_size (p) > 32 ? 24 : 16, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+            panel_get_safe_icon_size (p) >= 32 ? 24 : 16, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
     if (!pixbuf)
     {
-        pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, TRUE, 8, panel_get_safe_icon_size (p) > 32 ? 24 : 16, 
-            panel_get_safe_icon_size (p) > 32 ? 24 : 16);
+        pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, TRUE, 8, panel_get_safe_icon_size (p) >= 32 ? 24 : 16,
+            panel_get_safe_icon_size (p) >= 32 ? 24 : 16);
         gdk_pixbuf_fill (pixbuf, 0xffffff00);
     }
     gtk_image_set_from_pixbuf (GTK_IMAGE (image), pixbuf);
