@@ -36,8 +36,8 @@
 static Display* dpy;
 
 static const char usage[] =
-        "\nlxpanelctl - LXPanel Controller\n"
-        "Usage: lxpanelctl <command>\n\n"
+        "\nlxpanelctl-pi - LXPanel Controller\n"
+        "Usage: lxpanelctl-pi <command>\n\n"
         "Available commands:\n"
         "menu\t\t\tshow system menu\n"
         "run\t\t\tshow run dialog\n"
