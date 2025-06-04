@@ -1446,9 +1446,9 @@ void panel_apply_icon( GtkWindow *w )
 {
     GdkPixbuf* window_icon;
 
-    if(gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), "video-display"))
+    if(gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), "preferences-desktop"))
     {
-        window_icon = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(), "video-display", 24, 0, NULL);
+        window_icon = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(), "preferences-desktop", 24, 0, NULL);
     }
     else if(gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), "start-here"))
     {
