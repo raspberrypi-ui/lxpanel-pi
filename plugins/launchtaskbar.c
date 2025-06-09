@@ -1100,7 +1100,7 @@ static GtkWidget *_launchtaskbar_constructor(LXPanel *panel, config_setting_t *s
             launchtaskbar_constructor_add_default_special_case(ltbp, "soffice.bin", "libreoffice");
             launchtaskbar_constructor_add_default_special_case(ltbp, "x-terminal-emulator", "lxterminal");
             gchar *key_file_data = g_key_file_to_data(ltbp->p_key_file_special_cases, NULL, NULL);
-            g_file_set_contents(special_cases_filepath, key_file_data, -1, NULL);
+            //g_file_set_contents(special_cases_filepath, key_file_data, -1, NULL);
             g_free(key_file_data);
         }
     }
