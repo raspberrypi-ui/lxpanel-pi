@@ -1330,6 +1330,8 @@ void panel_configure( LXPanel* panel, int sel_page )
     w = (GtkWidget*)gtk_builder_get_object( builder, "notebook" );
     gtk_notebook_set_current_page( GTK_NOTEBOOK(w), sel_page );
 
+    gtk_widget_hide (gtk_notebook_get_nth_page (GTK_NOTEBOOK(w), 3));
+
     g_object_unref(builder);
 }
 
