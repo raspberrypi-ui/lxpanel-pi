@@ -1950,6 +1950,7 @@ void load_global_config()
 
 static void save_global_config()
 {
+#if 0
     char* file = _user_config_file_name("config", NULL);
     FILE* f = fopen( file, "w" );
     if( f )
@@ -1960,6 +1961,7 @@ static void save_global_config()
         fclose( f );
     }
     g_free(file);
+#endif
 }
 
 void free_global_config()
