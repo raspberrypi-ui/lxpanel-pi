@@ -494,8 +494,8 @@ GtkWidget *lxpanel_add_plugin(LXPanel *p, const char *name, config_setting_t *cf
     gint expand, padding = 0, border = 0, i;
 
     CHECK_MODULES();
-    if (!old_plugins_loaded)
-        plugin_get_available_classes();
+    //if (!old_plugins_loaded)
+    //    plugin_get_available_classes();
     old_plugins_loaded = TRUE;
     init = _find_plugin(name);
     if (init == NULL)
