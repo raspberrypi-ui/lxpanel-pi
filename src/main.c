@@ -570,26 +570,6 @@ out:
 }
 #undef CLIPBOARD_NAME
 
-#define WARN_FILE "/proc/device-tree/chosen/user-warnings"
-
-static gboolean check_user_warnings (gpointer data)
-{
-    if (!access (WARN_FILE, F_OK))
-    {
-        FILE *fp = fopen (WARN_FILE, "rb");
-        if (fp)
-        {
-            char *buf = NULL;
-            size_t siz = 0;
-            while (getline (&buf, &siz, fp) != -1)
-                lxpanel_notify ((LXPanel *) data, g_strstrip (buf));
-            free (buf);
-            fclose (fp);
-        }
-    }
-    return FALSE;
-}
-
 static void _start_panels_from_dir(const char *panel_dir, int fallback)
 {
     GDir* dir = g_dir_open( panel_dir, 0, NULL );
@@ -771,7 +751,6 @@ int main(int argc, char *argv[], char *env[])
         g_warning( "Config files are not found.\n" );
 
     lxpanel_notify_init (first_panel);
-    g_idle_add (check_user_warnings, first_panel);
 /*
  * FIXME: configure??
     if (config)
