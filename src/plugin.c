@@ -733,6 +733,7 @@ static void graph_redraw (PluginGraph *graph, char *label)
     pixbuf = gdk_pixbuf_new_from_data (cairo_image_surface_get_data (graph->pixmap), GDK_COLORSPACE_RGB, TRUE, 8,
         graph->pixmap_width, graph->pixmap_height, graph->pixmap_width * 4, NULL, NULL);
     gtk_image_set_from_pixbuf (GTK_IMAGE (graph->da), pixbuf);
+    g_object_unref (pixbuf);
 }
 
 /* Initialise graph for a particular size */
