@@ -83,6 +83,8 @@
 # include "menu-policy.h"
 #endif
 
+extern gboolean lxpanel_launch_path(LXPanel *panel, FmPath *path);
+
 #define PANEL_ICON_SIZE 24 /* see the private.h */
 
 /* Column definitions for configuration dialogs. */

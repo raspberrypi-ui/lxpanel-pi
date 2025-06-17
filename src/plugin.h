@@ -25,8 +25,6 @@
 #ifndef __PLUGIN_H__
 #define __PLUGIN_H__ 1
 
-#include <libfm/fm.h>
-
 #include "panel.h"
 #include "conf.h"
 
@@ -230,17 +228,6 @@ extern void lxpanel_plugin_popup_set_position_helper(LXPanel * p, GtkWidget * ne
  * used on a panel background configuration change.
  */
 extern void plugin_widget_set_background(GtkWidget * widget, LXPanel * p);
-
-/**
- * lxpanel_launch_path
- * @panel: a panel instance
- * @path: a path to launch
- *
- * Launches the @path either itself, or using default application.
- *
- * Returns: %TRUE if launch was successful.
- */
-extern gboolean lxpanel_launch_path(LXPanel *panel, FmPath *path);
 
 /**
  * lxpanel_plugin_show_config_dialog

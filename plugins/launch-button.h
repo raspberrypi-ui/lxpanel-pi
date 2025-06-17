@@ -20,6 +20,7 @@
 #define __LAUNCH_BUTTON_H__ 1
 
 #include "plugin.h"
+#include <libfm/fm.h>
 
 #include <gtk/gtk.h>
 

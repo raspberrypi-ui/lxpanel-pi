@@ -26,6 +26,8 @@
 #include <string.h>
 #include <gio/gdesktopappinfo.h>
 
+extern gboolean lxpanel_launch_path(LXPanel *panel, FmPath *path);
+
 /* Representative of one launch button.
  * Note that the launch parameters come from the specified desktop file, or from the configuration file.
  * This structure is also used during the "add to launchtaskbar" dialog to hold menu items. */
