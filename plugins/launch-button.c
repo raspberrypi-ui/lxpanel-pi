@@ -246,6 +246,7 @@ gboolean launch_button_wait_load(LaunchButton *btn)
 {
     if (!PANEL_IS_LAUNCH_BUTTON(btn) || btn->job == NULL)
         return TRUE;
+    while (fm_job_is_running(btn->job)) {}
     if (fm_job_run_sync(btn->job))
         return TRUE;
 
