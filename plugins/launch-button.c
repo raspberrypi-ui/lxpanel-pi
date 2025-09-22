@@ -161,7 +161,7 @@ LaunchButton *launch_button_new(LXPanel *panel, GtkWidget *plugin, FmPath *id,
     if (id == NULL)
     {
         /* a bootstrap button */
-        image = lxpanel_image_new_for_icon(panel, "gtk-add", -1, NULL);
+        image = lxpanel_image_new_for_icon(panel, "list-add", -1, NULL);
         lxpanel_button_compose(GTK_WIDGET(self), image, NULL, NULL);
     }
     else
