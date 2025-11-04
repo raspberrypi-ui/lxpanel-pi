@@ -1,3 +1,9 @@
+lxpanel-pi (1.3) trixie; urgency=medium
+
+  * Changes to support HiDPI plugins
+
+ -- Simon Long <simon@raspberrypi.com>  Tue, 04 Nov 2025 14:22:25 +0000
+
 lxpanel-pi (1.2) trixie; urgency=medium
 
   * Strip builddir from source archive
