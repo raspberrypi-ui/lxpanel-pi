@@ -1073,7 +1073,7 @@ static void _gtk_image_set_from_file_scaled(GtkWidget * img, ImgData * data)
 
         if (fallback == NULL)
             fallback = "application-x-executable";
-        data->pixbuf = fm_pixbuf_from_icon_with_fallback(data->icon, size, fallback);
+        data->pixbuf = fm_pixbuf_from_icon_with_fallback(data->icon, size, 1, fallback);
     }
     else
     {
@@ -1397,7 +1397,7 @@ GdkPixbuf * lxpanel_load_icon(const char * name, int width, int height, gboolean
 
     fm_icon = fm_icon_from_name(name ? name : "application-x-executable");
     /* well, we don't use parameter width and not really use cache here */
-    icon = fm_pixbuf_from_icon_with_fallback(fm_icon, height,
+    icon = fm_pixbuf_from_icon_with_fallback(fm_icon, height, 1,
                             use_fallback ? "application-x-executable" : NULL);
     g_object_unref(fm_icon);
     return icon;

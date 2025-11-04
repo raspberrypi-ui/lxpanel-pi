@@ -1227,7 +1227,7 @@ static void _launchbar_configure_add(GtkTreeView *menu_view, LaunchTaskBarPlugin
         config_setting_t *settings;
         gtk_container_add(GTK_CONTAINER(ltbp->lb_icon_grid), GTK_WIDGET(btn));
         gtk_list_store_append(list, &it);
-        pix = fm_pixbuf_from_icon(launch_button_get_icon(btn), PANEL_ICON_SIZE);
+        pix = fm_pixbuf_from_icon(launch_button_get_icon(btn), PANEL_ICON_SIZE, 1);
         gtk_list_store_set(list, &it,
             COL_ICON, pix,
             COL_TITLE, launch_button_get_disp_name(btn),
@@ -1385,7 +1385,7 @@ static void launchbar_configure_initialize_list(LaunchTaskBarPlugin *ltbp, GtkWi
         if (launch_button_get_settings(btn) == NULL) /* bootstrap button */
             continue;
         gtk_list_store_append(list, &it);
-        pix = fm_pixbuf_from_icon(launch_button_get_icon(btn), PANEL_ICON_SIZE);
+        pix = fm_pixbuf_from_icon(launch_button_get_icon(btn), PANEL_ICON_SIZE, 1);
         gtk_list_store_set(list, &it,
                            COL_ICON, pix,
                            COL_TITLE, launch_button_get_disp_name(btn),
