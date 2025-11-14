@@ -1417,11 +1417,12 @@ static void on_spin_changed( GtkSpinButton* spin, gpointer user_data )
     notify_apply_config( GTK_WIDGET(spin) );
 }
 
-static void on_toggle_changed( GtkSwitch* btn, gboolean state, gpointer user_data )
+static gboolean on_toggle_changed( GtkSwitch* btn, gboolean state, gpointer user_data )
 {
     gboolean* val = (gboolean*)user_data;
     *val = state;
     notify_apply_config( GTK_WIDGET(btn) );
+    return FALSE;
 }
 
 static void on_radio_changed( GtkRadioButton* btn, gpointer user_data )
