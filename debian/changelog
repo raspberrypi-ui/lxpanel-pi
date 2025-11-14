@@ -1,3 +1,9 @@
+lxpanel-pi (1.4) trixie; urgency=medium
+
+  * Fix switch handler return value
+
+ -- Simon Long <simon@raspberrypi.com>  Fri, 14 Nov 2025 11:09:31 +0000
+
 lxpanel-pi (1.3) trixie; urgency=medium
 
   * Changes to support HiDPI plugins
