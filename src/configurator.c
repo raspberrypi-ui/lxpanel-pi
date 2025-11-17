@@ -1417,12 +1417,11 @@ static void on_spin_changed( GtkSpinButton* spin, gpointer user_data )
     notify_apply_config( GTK_WIDGET(spin) );
 }
 
-static gboolean on_toggle_changed( GtkSwitch* btn, gboolean state, gpointer user_data )
+static void on_toggle_changed( GtkSwitch* btn, gpointer, gpointer user_data )
 {
     gboolean* val = (gboolean*)user_data;
-    *val = state;
+    *val = gtk_switch_get_active (btn);
     notify_apply_config( GTK_WIDGET(btn) );
-    return FALSE;
 }
 
 static void on_radio_changed( GtkRadioButton* btn, gpointer user_data )
@@ -1756,7 +1755,7 @@ GtkWidget *lxpanel_generic_config_dlg_new(const char *title, LXPanel *panel,
             case CONF_TYPE_BOOL:
                 entry = gtk_switch_new();
                 gtk_switch_set_active( GTK_SWITCH(entry), *(gboolean*)val );
-                g_signal_connect( entry, "state-set",
+                g_signal_connect( entry, "notify::active",
                   G_CALLBACK(on_toggle_changed), val );
                 break;
             case CONF_TYPE_FILE:
