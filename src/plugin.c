@@ -615,6 +615,36 @@ void lxpanel_plugin_set_menu_icon (LXPanel *p, GtkWidget *image, const char *ico
     g_object_unref (pixbuf);
 }
 
+GdkPixbuf *lxpanel_plugin_load_taskbar_pixbuf (LXPanel *p, const char *icon)
+{
+    char *fname;
+    GdkPixbuf *pix = NULL;
+    int size = panel_get_safe_icon_size (p);
+
+    if (icon)
+    {
+        if (strstr (icon, "/"))
+            pix = gdk_pixbuf_new_from_file_at_size (icon, size, size, NULL);
+        else
+        {
+            pix = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon,
+                size, 1, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+
+            // fallback for packages using obsolete icon location
+            if (!pix)
+            {
+                fname = g_strdup_printf ("/usr/share/pixmaps/%s", icon);
+                pix = gdk_pixbuf_new_from_file_at_size (fname, size, size, NULL);
+                g_free (fname);
+            }
+        }
+    }
+    if (!pix)
+        pix = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), "application-x-executable",
+            size, 1, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    return pix;
+}
+
 GtkWidget *lxpanel_plugin_new_menu_item (LXPanel *p, const char *text, int maxlen, const char *iconname)
 {
     GtkWidget *item = gtk_menu_item_new ();
