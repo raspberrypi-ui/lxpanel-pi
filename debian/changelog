@@ -1,3 +1,9 @@
+lxpanel-pi (1.7) trixie; urgency=medium
+
+  * Allow larger icon sizes
+
+ -- Simon Long <simon@raspberrypi.com>  Tue, 12 May 2026 08:54:37 +0100
+
 lxpanel-pi (1.6) trixie; urgency=medium
 
   * Add generic taskbar pixbuf load function
