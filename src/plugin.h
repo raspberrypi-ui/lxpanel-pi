@@ -271,6 +271,7 @@ typedef struct {
     const char *name;
     const char *label;
     void **value;
+    const char *def_val;
 } conf_table_t;
 
 /**

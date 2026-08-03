@@ -920,24 +920,33 @@ void lxplug_read_settings (config_setting_t *settings, conf_table_t *conf_table)
         switch (cptr->type)
         {
             case CONF_TYPE_BOOL :
-                if (config_setting_lookup_int (settings, cptr->name, &val))
-                    *(cptr->value) = (void *) ((long) (val ? 1 : 0));
+                if (!config_setting_lookup_int (settings, cptr->name, &val))
+                {
+                    if (!g_strcmp0 (cptr->def_val, "true")) val = 1;
+                    else val = 0;
+                }
+                *(cptr->value) = (void *) ((long) (val ? 1 : 0));
                 break;
 
             case CONF_TYPE_INT :
-                if (config_setting_lookup_int (settings, cptr->name, &val))
-                    *(cptr->value) = (void *) ((long) val);
+                if (!config_setting_lookup_int (settings, cptr->name, &val))
+                    sscanf (cptr->def_val, "%d", &val);
+                *(cptr->value) = (void *) ((long) val);
                 break;
 
             case CONF_TYPE_STRING :
             case CONF_TYPE_FONT :
                 if (config_setting_lookup_string (settings, cptr->name, &str))
                     *(cptr->value) = g_strdup (str);
+                else
+                    *(cptr->value) = g_strdup (cptr->def_val);
                 break;
 
             case CONF_TYPE_COLOUR :
                 if (config_setting_lookup_string (settings, cptr->name, &str))
                     gdk_rgba_parse ((GdkRGBA *) cptr->value, str);
+                else
+                    gdk_rgba_parse ((GdkRGBA *) cptr->value, cptr->def_val);
                 break;
 
             case CONF_TYPE_RBUTTON :
