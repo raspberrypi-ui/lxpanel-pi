@@ -41,6 +41,7 @@ executable('lxpanel-pi', panel_sources,
         dependencies: deps,
         install: true,
         export_dynamic: true,
+        c_args : '-DUSES_MENUCACHE',
         link_with : [ liblxpanel.get_static_lib(), liblxpanelplugins ]
 )
 

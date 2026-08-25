@@ -38,6 +38,11 @@ G_BEGIN_DECLS
 
 #define MENU_ICON_SPACE 6
 
+#ifdef USES_MENUCACHE
+#include <menu-cache.h>
+extern MenuCache *mcache;
+#endif
+
 /**
  * LXPanelPluginInit:
  * @init: (allow-none): callback on lxpanel start
@@ -419,6 +424,7 @@ extern void graph_new_point (PluginGraph *graph, float value, int state, char *l
 extern void graph_free (PluginGraph *graph);
 
 extern void popup_at_button (LXPanel *panel, GtkWidget *window, GtkWidget *button, gpointer plugin);
+extern void close_popup (void);
 
 extern gboolean is_pi (void);
 
@@ -439,6 +445,13 @@ extern void lxplug_write_settings (config_setting_t *settings, conf_table_t *con
 #define wrap_popup_at_button(plugin,window,button) popup_at_button(plugin->panel,window,button,plugin)
 #define set_image_from_pixbuf(image,pixbuf) gtk_image_set_from_pixbuf(GTK_IMAGE (image),pixbuf)
 #define CHECK_LONGPRESS
+#define NOTLONG_EXIT
+#define wrap_add_longpress(gesture,plugin,cb,ptr)
+#define wrap_free_gesture(gesture)
+#define HDMI_NUM_DEVICES "xrandr -q | grep -c connected"
+#define HDMI_DEVICE_0 "xrandr --listmonitors | grep 0: | cut -d ' ' -f 6"
+#define HDMI_DEVICE_1 "xrandr --listmonitors | grep 1: | cut -d ' ' -f 6"
+
 
 G_END_DECLS
 

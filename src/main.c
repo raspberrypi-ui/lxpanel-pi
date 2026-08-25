@@ -59,6 +59,8 @@
 #include "dbg.h"
 #include "space.h"
 
+MenuCache *mcache;
+
 static gchar *cfgfile = NULL;
 static gchar version[] = VERSION;
 static int config = 0;
@@ -723,6 +725,10 @@ int main(int argc, char *argv[], char *env[])
         printf("There is already an instance of LXPanel.  Now to exit\n");
         exit(1);
     }
+
+    // create menu cache
+    gboolean need_prefix = (g_getenv ("XDG_MENU_PREFIX") == NULL);
+    mcache = menu_cache_lookup_sync (need_prefix ? "lxde-applications.menu" : "applications.menu");
 
     _ensure_user_config_dirs();
 
