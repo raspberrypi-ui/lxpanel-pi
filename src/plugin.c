@@ -868,6 +868,8 @@ void graph_free (PluginGraph *graph)
 /* Click-away pop-up */
 /*----------------------------------------------------------------------------*/
 
+static GtkWidget *popwindow = NULL;
+
 static gboolean popup_mapped (GtkWidget *widget, GdkEvent *, gpointer)
 {
     gdk_seat_grab (gdk_display_get_default_seat (gdk_display_get_default ()), gtk_widget_get_window (widget), GDK_SEAT_CAPABILITY_ALL_POINTING, TRUE, NULL, NULL, NULL, NULL);
@@ -901,6 +903,13 @@ void popup_at_button (LXPanel *panel, GtkWidget *window, GtkWidget *button, gpoi
     gdk_window_move (gtk_widget_get_window (window), x, y);
     g_signal_connect (G_OBJECT (window), "map-event", G_CALLBACK (popup_mapped), plugin);
     g_signal_connect (G_OBJECT (window), "button-press-event", G_CALLBACK (popup_button_press), plugin);
+    popwindow = window;
+}
+
+void close_popup (void)
+{
+    if (popwindow) gtk_widget_destroy (popwindow);
+    popwindow = NULL;
 }
 
 gboolean is_pi (void)
