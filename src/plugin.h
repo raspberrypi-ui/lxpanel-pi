@@ -446,7 +446,8 @@ extern void lxplug_write_settings (config_setting_t *settings, conf_table_t *con
 #define wrap_save_config(plugin,name,table) lxplug_write_settings(plugin->settings,table)
 #define set_image_from_pixbuf(image,pixbuf) gtk_image_set_from_pixbuf(GTK_IMAGE (image),pixbuf)
 #define CHECK_LONGPRESS
-#define NOTLONG_EXIT
+#define CLEAR_PRESS
+#define LONGPRESS (0)
 #define wrap_add_longpress(gesture,plugin,cb,ptr)
 #define wrap_free_gesture(gesture)
 #define HDMI_NUM_DEVICES "xrandr -q | grep -c connected"
