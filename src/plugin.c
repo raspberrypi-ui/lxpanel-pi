@@ -869,6 +869,7 @@ void graph_free (PluginGraph *graph)
 /*----------------------------------------------------------------------------*/
 
 static GtkWidget *popwindow = NULL;
+static LXPanel *poppanel;
 
 static gboolean popup_mapped (GtkWidget *widget, GdkEvent *, gpointer)
 {
@@ -888,7 +889,14 @@ static gboolean popup_button_press (GtkWidget *widget, GdkEventButton *event, gp
     return FALSE;
 }
 
-void popup_at_button (LXPanel *panel, GtkWidget *window, GtkWidget *button, gpointer plugin)
+static void popup_resize (GtkWidget *window, GtkAllocation *, GtkWidget *button)
+{
+    gint x, y;
+    lxpanel_plugin_popup_set_position_helper (poppanel, button, window, &x, &y);
+    gdk_window_move (gtk_widget_get_window (window), x, y);
+}
+
+void popup_at_button (LXPanel *panel, GtkWidget *window, GtkWidget *button, gpointer)
 {
     gint x, y;
     gtk_window_set_decorated (GTK_WINDOW (window), FALSE);
@@ -901,9 +909,11 @@ void popup_at_button (LXPanel *panel, GtkWidget *window, GtkWidget *button, gpoi
     gtk_widget_show_all (window);
     gtk_window_present (GTK_WINDOW (window));
     gdk_window_move (gtk_widget_get_window (window), x, y);
-    g_signal_connect (G_OBJECT (window), "map-event", G_CALLBACK (popup_mapped), plugin);
-    g_signal_connect (G_OBJECT (window), "button-press-event", G_CALLBACK (popup_button_press), plugin);
+    g_signal_connect (G_OBJECT (window), "map-event", G_CALLBACK (popup_mapped), NULL);
+    g_signal_connect (G_OBJECT (window), "button-press-event", G_CALLBACK (popup_button_press), NULL);
+    g_signal_connect (G_OBJECT (window), "size-allocate", G_CALLBACK (popup_resize), button);
     popwindow = window;
+    poppanel = panel;
 }
 
 void close_popup (void)
