@@ -60,6 +60,7 @@
 #include "space.h"
 
 MenuCache *mcache;
+gboolean reload = FALSE;
 
 static gchar *cfgfile = NULL;
 static gchar version[] = VERSION;

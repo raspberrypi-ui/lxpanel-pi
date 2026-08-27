@@ -43,6 +43,8 @@ G_BEGIN_DECLS
 extern MenuCache *mcache;
 #endif
 
+extern gboolean reload;
+
 /**
  * LXPanelPluginInit:
  * @init: (allow-none): callback on lxpanel start
