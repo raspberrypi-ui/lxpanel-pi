@@ -75,6 +75,7 @@
 
 #include "misc.h"
 #include "ev.h"
+#define USES_MENUCACHE
 #include "plugin.h"
 #include "task-button.h"
 #include "launch-button.h"
@@ -735,6 +736,33 @@ static LaunchButton *launchbar_exec_bin_exists(LaunchTaskBarPlugin *lb, FmPath *
     return ret_val;
 }
 
+/* original by Claude, reviewed and edited by SPL */
+static FmPath *find_desktop_path_by_id (const char *id)
+{
+    GSList *apps, *l;
+    FmPath *path = NULL;
+    const char *item_id;
+    char *rel_path;
+
+    if (mcache == NULL) return NULL;
+
+    apps = menu_cache_list_all_apps (mcache);
+    for (l = apps; l; l = l->next)
+    {
+        item_id = menu_cache_item_get_id (MENU_CACHE_ITEM (l->data));
+        if (item_id && !strcmp (item_id, id))
+        {
+            rel_path = menu_cache_dir_make_path (MENU_CACHE_DIR (l->data));
+            path = fm_path_new_relative (fm_path_get_apps_menu (), rel_path + 13); /* skip /Applications */
+            g_free (rel_path);
+            break;
+        }
+    }
+
+    g_slist_free_full (apps, (GDestroyNotify) ((void *) menu_cache_item_unref));
+    return path;
+}
+
 /* Read the configuration file entry for a launchtaskbar button and create it. */
 static gboolean launchbutton_constructor(LaunchTaskBarPlugin * lb, config_setting_t * s)
 {
@@ -760,8 +788,12 @@ static gboolean launchbutton_constructor(LaunchTaskBarPlugin * lb, config_settin
     }
     else
     {
-        str_path = g_strdup_printf("search://menu://applications/?recursive=1&show_hidden=1&name=%s", str);
-        path = fm_path_new_for_uri(str_path);
+        path = find_desktop_path_by_id (str);
+        if (path == NULL)
+        {
+            g_warning("launchbar: desktop entry '%s' not found in menu cache", str);
+            return FALSE;
+        }
     }
     btn = launch_button_new(lb->panel, lb->plugin, path, s);
     g_free(str_path);
@@ -1748,10 +1780,9 @@ static GtkWidget *launchtaskbar_configure(LXPanel *panel, GtkWidget *p)
         ltbp->p_notebook_page_launch = gtk_notebook_get_nth_page(ltbp->p_notebook, 0);
         ltbp->p_notebook_page_task = gtk_notebook_get_nth_page(ltbp->p_notebook, 1);
         set_config_visibility(ltbp);
-	object = gtk_builder_get_object(builder, "combobox_mode");
+        object = gtk_builder_get_object(builder, "combobox_mode");
         gtk_combo_box_set_active(GTK_COMBO_BOX(object), ltbp->mode);
-	g_signal_connect(object, "changed",
-			G_CALLBACK(on_combobox_mode_changed), ltbp);
+        g_signal_connect(object, "changed", G_CALLBACK(on_combobox_mode_changed), ltbp);
 
 #define SETUP_TOGGLE_BUTTON(button,member) \
         object = gtk_builder_get_object(builder, #button); \
