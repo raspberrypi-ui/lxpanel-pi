@@ -753,8 +753,11 @@ static FmPath *find_desktop_path_by_id (const char *id)
         if (item_id && !strcmp (item_id, id))
         {
             file_path = menu_cache_item_get_file_path (MENU_CACHE_ITEM (l->data));
-            path = fm_path_new_for_path (file_path);
-            g_free (file_path);
+            if (file_path)
+            {
+                path = fm_path_new_for_path (file_path);
+                g_free (file_path);
+            }
             break;
         }
     }
