@@ -59,7 +59,7 @@
 #include "dbg.h"
 #include "space.h"
 
-MenuCache *mcache;
+MenuCache *mcache, *mcache_h;
 gboolean reload = FALSE;
 
 static gchar *cfgfile = NULL;
@@ -730,6 +730,7 @@ int main(int argc, char *argv[], char *env[])
     // create menu cache
     gboolean need_prefix = (g_getenv ("XDG_MENU_PREFIX") == NULL);
     mcache = menu_cache_lookup_sync (need_prefix ? "lxde-applications.menu" : "applications.menu");
+    mcache_h = menu_cache_lookup_sync (need_prefix ? "lxde-applications.menu+hidden" : "applications.menu+hidden");
 
     _ensure_user_config_dirs();
 

@@ -746,7 +746,7 @@ static FmPath *find_desktop_path_by_id (const char *id)
 
     if (mcache == NULL) return NULL;
 
-    apps = menu_cache_list_all_apps (mcache);
+    apps = menu_cache_list_all_apps (mcache_h);
     for (l = apps; l; l = l->next)
     {
         item_id = menu_cache_item_get_id (MENU_CACHE_ITEM (l->data));

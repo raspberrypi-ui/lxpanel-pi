@@ -40,7 +40,7 @@ G_BEGIN_DECLS
 
 #ifdef USES_MENUCACHE
 #include <menu-cache.h>
-extern MenuCache *mcache;
+extern MenuCache *mcache, *mcache_h;
 #endif
 
 extern gboolean reload;
