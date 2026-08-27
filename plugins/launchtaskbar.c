@@ -742,9 +742,9 @@ static FmPath *find_desktop_path_by_id (const char *id)
     GSList *apps, *l;
     FmPath *path = NULL;
     const char *item_id;
-    char *rel_path;
+    char *file_path;
 
-    if (mcache == NULL) return NULL;
+    if (mcache_h == NULL) return NULL;
 
     apps = menu_cache_list_all_apps (mcache_h);
     for (l = apps; l; l = l->next)
@@ -752,9 +752,9 @@ static FmPath *find_desktop_path_by_id (const char *id)
         item_id = menu_cache_item_get_id (MENU_CACHE_ITEM (l->data));
         if (item_id && !strcmp (item_id, id))
         {
-            rel_path = menu_cache_dir_make_path (MENU_CACHE_DIR (l->data));
-            path = fm_path_new_relative (fm_path_get_apps_menu (), rel_path + 13); /* skip /Applications */
-            g_free (rel_path);
+            file_path = menu_cache_item_get_file_path (MENU_CACHE_ITEM (l->data));
+            path = fm_path_new_for_path (file_path);
+            g_free (file_path);
             break;
         }
     }
