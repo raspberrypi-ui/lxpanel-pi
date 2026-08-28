@@ -794,7 +794,7 @@ static gboolean launchbutton_constructor(LaunchTaskBarPlugin * lb, config_settin
         path = find_desktop_path_by_id (str);
         if (path == NULL)
         {
-            g_warning("launchbar: desktop entry '%s' not found in menu cache", str);
+            g_warning ("launchbar: desktop entry '%s' not found in menu cache", str);
             return FALSE;
         }
     }
