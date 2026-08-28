@@ -115,6 +115,23 @@ static gboolean launch_button_release_event(GtkWidget *widget, GdkEventButton *e
             ;
         else if (btn->fi == NULL)  /* The bootstrap button */
             lxpanel_plugin_show_config_dialog(btn->plugin);
+        else if (fm_file_info_is_desktop_entry (btn->fi))
+        {
+            GDesktopAppInfo *app = g_desktop_app_info_new (fm_file_info_get_name (btn->fi));
+            if (!app)
+            {
+                g_warning ("launchbar: failed to launch '%s': invalid desktop entry", fm_file_info_get_disp_name (btn->fi));
+                return TRUE;
+            }
+
+            GError *err = NULL;
+            if (!g_app_info_launch (G_APP_INFO (app), NULL, NULL, &err))
+            {
+                g_warning ("launchbar: failed to launch '%s': %s", fm_file_info_get_disp_name (btn->fi), err->message);
+                g_clear_error (&err);
+            }
+            g_object_unref (app);
+        }
         else
             lxpanel_launch_path(btn->panel, fm_file_info_get_path(btn->fi));
         return TRUE;
@@ -124,7 +141,7 @@ static gboolean launch_button_release_event(GtkWidget *widget, GdkEventButton *e
 
 static gboolean launch_button_press_event(GtkWidget *widget, GdkEventButton *event)
 {
-	return FALSE;
+    return FALSE;
 }
 
 static void launch_button_init(LaunchButton *self)
