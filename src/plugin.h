@@ -455,7 +455,7 @@ extern void lxplug_write_settings (config_setting_t *settings, conf_table_t *con
 #define HDMI_NUM_DEVICES "xrandr -q | grep -c connected"
 #define HDMI_DEVICE_0 "xrandr --listmonitors | grep 0: | cut -d ' ' -f 6"
 #define HDMI_DEVICE_1 "xrandr --listmonitors | grep 1: | cut -d ' ' -f 6"
-
+#define LXPLUG_VARS LXPanel*panel; config_setting_t*settings;
 
 G_END_DECLS
 
