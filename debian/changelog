@@ -1,3 +1,9 @@
+lxpanel-pi (1.10) trixie; urgency=medium
+
+  * Add add_to_launcher function for plugins
+
+ -- Simon Long <simon@raspberrypi.com>  Tue, 01 Sep 2026 09:26:03 +0100
+
 lxpanel-pi (1.9) trixie; urgency=medium
 
   * New shim structure for plugins
