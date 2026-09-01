@@ -1006,3 +1006,39 @@ void lxplug_write_settings (config_setting_t *settings, conf_table_t *conf_table
         cptr++;
     }
 }
+
+void add_to_launcher (const char *name)
+{
+    const LXPanelPluginInit *init;
+    GSList *l;
+    LXPanel *p;
+    GList *plugins, *pl;
+    char *cmd;
+
+    /* find the launchbar init data */
+    init = g_hash_table_lookup (lxpanel_get_all_types (), "launchbar");
+    if (!init || !init->control) return;
+
+    cmd = g_strdup_printf ("add %s", name);
+
+    /* loop through all panels and plugins to find the launchbar plugin */
+    for (l = all_panels; l; l = l->next)
+    {
+        p = (LXPanel *) l->data;
+        if (!p->priv->box) continue;
+
+        /* find plugin matching the init data */
+        plugins = gtk_container_get_children (GTK_CONTAINER (p->priv->box));
+        for (pl = plugins; pl; pl = pl->next)
+        {
+            if (PLUGIN_CLASS (pl->data) == init)
+            {
+                /* call the add command on it */
+                init->control (GTK_WIDGET (pl->data), cmd);
+                break;
+            }
+        }
+        g_list_free (plugins);
+    }
+    g_free (cmd);
+}

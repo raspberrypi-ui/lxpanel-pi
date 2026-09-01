@@ -433,6 +433,8 @@ extern gboolean is_pi (void);
 extern void lxplug_read_settings (config_setting_t *settings, conf_table_t *conf_table);
 extern void lxplug_write_settings (config_setting_t *settings, conf_table_t *conf_table);
 
+extern void add_to_launcher (const char *name);
+
 #define wrap_notify(panel,msg) lxpanel_notify(panel,msg)
 #define wrap_critical(panel,msg) lxpanel_notify(panel,msg)
 #define wrap_notify_clear(seq) lxpanel_notify_clear(seq)
